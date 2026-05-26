@@ -171,7 +171,7 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
 
             if (!string.IsNullOrEmpty(el.Header))
             {
-                var headerText = $"{el.Header}: ";
+                var headerText = el.Header + el.HeaderSeparator;
                 canvas.DrawText(headerText, el.X, by, hf, paint);
                 canvas.DrawText(value, el.X + hf.MeasureText(headerText), by, rf, paint);
             }

@@ -45,6 +45,10 @@ public sealed class TemplateElement
     [JsonPropertyName("inline")]
     public bool Inline { get; set; }
 
+    /// <summary>Text placed between the header and value when Inline is true. Defaults to ": ". Set to "" to omit the separator.</summary>
+    [JsonPropertyName("headerSeparator")]
+    public string HeaderSeparator { get; set; } = ": ";
+
     /// <summary>Word-wrap the value inside Width.</summary>
     [JsonPropertyName("wrap")]
     public bool Wrap { get; set; }
