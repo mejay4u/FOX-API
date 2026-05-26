@@ -47,6 +47,8 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
     // ── Typefaces — loaded once from file (or system), shared across all renders.
     private readonly SKTypeface _regular;
     private readonly SKTypeface _bold;
+    private readonly SKTypeface _italic;
+    private readonly SKTypeface _boldItalic;
 
     // ── Per-path caches — populated on first access, read-only thereafter.
     //    Lazy<T> ensures the factory runs exactly once even under concurrent load.
@@ -71,8 +73,10 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
         _logger     = logger;
 
         var fontsRoot = Path.Combine(options.Value.BasePath, "Fonts");
-        _regular = LoadTypeface(fontsRoot, bold: false);
-        _bold    = LoadTypeface(fontsRoot, bold: true);
+        _regular    = LoadTypeface(fontsRoot, bold: false, italic: false);
+        _bold       = LoadTypeface(fontsRoot, bold: true,  italic: false);
+        _italic     = LoadTypeface(fontsRoot, bold: false, italic: true);
+        _boldItalic = LoadTypeface(fontsRoot, bold: true,  italic: true);
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -147,7 +151,7 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
         // ── Case 1: Static text (literal label, no binding) ──────────
         if (!string.IsNullOrEmpty(el.StaticText))
         {
-            using var font = MakeFont(el.Bold ? _bold : _regular, el.FontSize);
+            using var font = MakeFont(SelectTypeface(el.Bold, el.Italic), el.FontSize);
             DrawLines(canvas, el.StaticText, el.X,
                       BaselineY(el.Y, font), el.Width, LineH(font), el.Wrap, font, paint);
             return;
@@ -157,20 +161,19 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
             ? _binding.Resolve(el.Binding, context)
             : string.Empty;
 
-        // ── Case 2: Inline — "Bold Header: regular value" on one line ─
+        // ── Case 2: Inline — "Header: value" on one line ─────────────
         if (el.Inline)
         {
-            using var bf = MakeFont(_bold,    el.FontSize);
-            using var rf = MakeFont(_regular, el.FontSize);
-            // Use bold font for metrics — regular and bold of the same family
-            // share identical ascent/descent, so baseline is identical.
-            float by = BaselineY(el.Y, bf);
+            using var hf = MakeFont(SelectTypeface(el.HeaderBold, el.HeaderItalic), el.FontSize);
+            using var rf = MakeFont(SelectTypeface(el.Bold,       el.Italic),       el.FontSize);
+            // Use the taller of the two for baseline so both fonts sit on the same line.
+            float by = BaselineY(el.Y, hf);
 
             if (!string.IsNullOrEmpty(el.Header))
             {
                 var headerText = $"{el.Header}: ";
-                canvas.DrawText(headerText, el.X, by, bf, paint);
-                canvas.DrawText(value, el.X + bf.MeasureText(headerText), by, rf, paint);
+                canvas.DrawText(headerText, el.X, by, hf, paint);
+                canvas.DrawText(value, el.X + hf.MeasureText(headerText), by, rf, paint);
             }
             else
             {
@@ -182,13 +185,13 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
         // ── Case 3: Header on first line, value on subsequent lines ──
         if (!string.IsNullOrEmpty(el.Header))
         {
-            using var bf = MakeFont(_bold, el.FontSize);
+            using var bf = MakeFont(SelectTypeface(el.HeaderBold, el.HeaderItalic), el.FontSize);
             float headerBaseline = BaselineY(el.Y, bf);
             canvas.DrawText(el.Header, el.X, headerBaseline, bf, paint);
 
             if (!string.IsNullOrEmpty(value))
             {
-                using var vf = MakeFont(el.Bold ? _bold : _regular, el.FontSize);
+                using var vf = MakeFont(SelectTypeface(el.Bold, el.Italic), el.FontSize);
                 // Advance by bold line height × gap so header and value breathe slightly.
                 float valueStart = headerBaseline + LineH(bf) * HeaderValueGap;
                 DrawLines(canvas, value, el.X, valueStart, el.Width, LineH(vf), el.Wrap, vf, paint);
@@ -199,7 +202,7 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
         // ── Case 4: Value only (no header) ───────────────────────────
         if (!string.IsNullOrEmpty(value))
         {
-            using var vf = MakeFont(el.Bold ? _bold : _regular, el.FontSize);
+            using var vf = MakeFont(SelectTypeface(el.Bold, el.Italic), el.FontSize);
             DrawLines(canvas, value, el.X,
                       BaselineY(el.Y, vf), el.Width, LineH(vf), el.Wrap, vf, paint);
         }
@@ -264,6 +267,14 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
     /// Hinting = Full    = crisp stroke geometry at small sizes.
     /// Caller owns and must dispose.
     /// </summary>
+    private SKTypeface SelectTypeface(bool bold, bool italic) => (bold, italic) switch
+    {
+        (true,  true)  => _boldItalic,
+        (true,  false) => _bold,
+        (false, true)  => _italic,
+        _              => _regular,
+    };
+
     private static SKFont MakeFont(SKTypeface typeface, float size) =>
         new(typeface, size)
         {
@@ -390,13 +401,26 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
             }, isThreadSafe: true))
             .Value;
 
-    private static SKTypeface LoadTypeface(string fontsRoot, bool bold)
+    private static SKTypeface LoadTypeface(string fontsRoot, bool bold, bool italic)
     {
-        var file = Path.Combine(fontsRoot, bold ? "bold.ttf" : "regular.ttf");
+        var fileName = (bold, italic) switch
+        {
+            (true,  true)  => "bolditalic.ttf",
+            (true,  false) => "bold.ttf",
+            (false, true)  => "italic.ttf",
+            _              => "regular.ttf",
+        };
+        var file = Path.Combine(fontsRoot, fileName);
         if (File.Exists(file)) return SKTypeface.FromFile(file);
-        return bold
-            ? SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)   ?? SKTypeface.Default
-            : SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal)  ?? SKTypeface.Default;
+
+        var style = (bold, italic) switch
+        {
+            (true,  true)  => SKFontStyle.BoldItalic,
+            (true,  false) => SKFontStyle.Bold,
+            (false, true)  => SKFontStyle.Italic,
+            _              => SKFontStyle.Normal,
+        };
+        return SKTypeface.FromFamilyName("Arial", style) ?? SKTypeface.Default;
     }
 
     private static SKColor ParseColor(string? hex)
@@ -445,6 +469,8 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
     {
         _regular.Dispose();
         _bold.Dispose();
+        _italic.Dispose();
+        _boldItalic.Dispose();
         foreach (var lazy in _bgCache.Values)
         {
             if (lazy.IsValueCreated) lazy.Value.Dispose();

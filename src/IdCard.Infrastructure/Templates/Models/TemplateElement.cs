@@ -25,9 +25,21 @@ public sealed class TemplateElement
     [JsonPropertyName("fontSize")]
     public float FontSize { get; set; } = 12f;
 
-    /// <summary>When true the element's value font is bold (header is always bold).</summary>
+    /// <summary>When true the element's value font is bold.</summary>
     [JsonPropertyName("bold")]
     public bool Bold { get; set; }
+
+    /// <summary>When true the element's value font is italic.</summary>
+    [JsonPropertyName("italic")]
+    public bool Italic { get; set; }
+
+    /// <summary>When false the header is rendered in the regular typeface. Defaults to true (header bold).</summary>
+    [JsonPropertyName("headerBold")]
+    public bool HeaderBold { get; set; } = true;
+
+    /// <summary>When true the header is rendered in italic. Defaults to false.</summary>
+    [JsonPropertyName("headerItalic")]
+    public bool HeaderItalic { get; set; }
 
     /// <summary>Render Header and Value on the same line ("Header: Value").</summary>
     [JsonPropertyName("inline")]
