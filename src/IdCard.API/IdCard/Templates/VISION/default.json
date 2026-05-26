@@ -1,0 +1,176 @@
+{
+  "templateCode": "default",
+  "lob": "VISION",
+  "front": {
+    "backgroundAsset": "front.png",
+    "elements": [
+      {
+        "type": "text",
+        "header": "Member Name",
+        "binding": "MemberName",
+        "x": 20,
+        "y": 62,
+        "width": 300,
+        "height": 30,
+        "fontSize": 13,
+        "bold": true,
+        "inline": false,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Member ID",
+        "binding": "Member.MemberId",
+        "x": 20,
+        "y": 108,
+        "width": 260,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Group",
+        "binding": "GroupNumber",
+        "x": 20,
+        "y": 131,
+        "width": 260,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Vision Plan",
+        "binding": "PlanName",
+        "x": 20,
+        "y": 154,
+        "width": 300,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Network",
+        "binding": "NetworkName",
+        "x": 20,
+        "y": 177,
+        "width": 300,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Effective Date",
+        "binding": "EffectiveDate",
+        "x": 20,
+        "y": 200,
+        "width": 260,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "staticText": "Coverage Summary",
+        "x": 20,
+        "y": 238,
+        "width": 260,
+        "height": 14,
+        "fontSize": 9,
+        "bold": true,
+        "inline": false,
+        "wrap": false,
+        "color": "#555555"
+      },
+      {
+        "type": "text",
+        "header": "Exam Copay",
+        "binding": "Member.CopayOffice",
+        "x": 20,
+        "y": 254,
+        "width": 260,
+        "height": 18,
+        "fontSize": 10,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Materials Copay",
+        "binding": "Member.CopaySpecialist",
+        "x": 20,
+        "y": 276,
+        "width": 260,
+        "height": 18,
+        "fontSize": 10,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Out-of-Pocket Max",
+        "binding": "OutOfPocketMax",
+        "x": 20,
+        "y": 298,
+        "width": 260,
+        "height": 18,
+        "fontSize": 10,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "staticText": "Vision Provider",
+        "x": 20,
+        "y": 330,
+        "width": 200,
+        "height": 14,
+        "fontSize": 9,
+        "bold": true,
+        "inline": false,
+        "wrap": false,
+        "color": "#555555"
+      },
+      {
+        "type": "text",
+        "binding": "PcpDetails",
+        "x": 20,
+        "y": 346,
+        "width": 320,
+        "height": 55,
+        "fontSize": 9,
+        "bold": false,
+        "inline": false,
+        "wrap": true,
+        "color": "#333333"
+      },
+      {
+        "type": "image",
+        "binding": "QRCode",
+        "x": 490,
+        "y": 200,
+        "width": 130,
+        "height": 130
+      }
+    ]
+  },
+  "back": {
+    "backgroundAsset": "back.png"
+  }
+}

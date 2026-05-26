@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IdCard.Domain\IdCard.Domain.csproj" />
+    <ProjectReference Include="..\IdCard.Application\IdCard.Application.csproj" />
+    <ProjectReference Include="..\IdCard.Infrastructure\IdCard.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Ensure IdCard folder (templates + assets) copies to output -->
+  <ItemGroup>
+    <Content Update="IdCard\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

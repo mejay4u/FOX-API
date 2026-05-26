@@ -1,0 +1,176 @@
+{
+  "templateCode": "default",
+  "lob": "MEDICAL",
+  "front": {
+    "backgroundAsset": "front.png",
+    "elements": [
+      {
+        "type": "text",
+        "header": "Member Name",
+        "binding": "MemberName",
+        "x": 20,
+        "y": 62,
+        "width": 300,
+        "height": 30,
+        "fontSize": 13,
+        "bold": true,
+        "inline": false,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Member ID",
+        "binding": "Member.MemberId",
+        "x": 20,
+        "y": 105,
+        "width": 250,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Subscriber ID",
+        "binding": "Member.SubscriberId",
+        "x": 20,
+        "y": 128,
+        "width": 250,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Group",
+        "binding": "GroupNumber",
+        "x": 20,
+        "y": 151,
+        "width": 250,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Plan",
+        "binding": "PlanName",
+        "x": 20,
+        "y": 174,
+        "width": 280,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Network",
+        "binding": "NetworkName",
+        "x": 20,
+        "y": 197,
+        "width": 280,
+        "height": 20,
+        "fontSize": 10,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "staticText": "Copays",
+        "x": 20,
+        "y": 228,
+        "width": 280,
+        "height": 16,
+        "fontSize": 9,
+        "bold": true,
+        "inline": false,
+        "wrap": false,
+        "color": "#555555"
+      },
+      {
+        "type": "text",
+        "binding": "Copays",
+        "x": 20,
+        "y": 244,
+        "width": 290,
+        "height": 35,
+        "fontSize": 9,
+        "bold": false,
+        "inline": false,
+        "wrap": true,
+        "color": "#333333"
+      },
+      {
+        "type": "text",
+        "staticText": "PCP Details",
+        "x": 20,
+        "y": 290,
+        "width": 200,
+        "height": 16,
+        "fontSize": 9,
+        "bold": true,
+        "inline": false,
+        "wrap": false,
+        "color": "#555555"
+      },
+      {
+        "type": "text",
+        "binding": "PcpDetails",
+        "x": 20,
+        "y": 306,
+        "width": 310,
+        "height": 55,
+        "fontSize": 9,
+        "bold": false,
+        "inline": false,
+        "wrap": true,
+        "color": "#333333"
+      },
+      {
+        "type": "text",
+        "staticText": "Rx",
+        "x": 20,
+        "y": 368,
+        "width": 80,
+        "height": 14,
+        "fontSize": 8,
+        "bold": true,
+        "inline": false,
+        "wrap": false,
+        "color": "#555555"
+      },
+      {
+        "type": "text",
+        "binding": "RxInfo",
+        "x": 20,
+        "y": 380,
+        "width": 340,
+        "height": 14,
+        "fontSize": 8,
+        "bold": false,
+        "inline": false,
+        "wrap": false,
+        "color": "#333333"
+      },
+      {
+        "type": "image",
+        "binding": "QRCode",
+        "x": 490,
+        "y": 200,
+        "width": 130,
+        "height": 130
+      }
+    ]
+  },
+  "back": {
+    "backgroundAsset": "back.png"
+  }
+}

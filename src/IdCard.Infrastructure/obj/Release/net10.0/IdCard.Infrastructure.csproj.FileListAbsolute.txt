@@ -1,0 +1,17 @@
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.Infrastructure.csproj.AssemblyReference.cache
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.Infrastructure.AssemblyInfoInputs.cache
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.Infrastructure.AssemblyInfo.cs
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.Infrastructure.csproj.CoreCompileInputs.cache
+C:\ACH\FOX API\src\IdCard.Infrastructure\bin\Release\net10.0\IdCard.Infrastructure.deps.json
+C:\ACH\FOX API\src\IdCard.Infrastructure\bin\Release\net10.0\IdCard.Infrastructure.dll
+C:\ACH\FOX API\src\IdCard.Infrastructure\bin\Release\net10.0\IdCard.Infrastructure.pdb
+C:\ACH\FOX API\src\IdCard.Infrastructure\bin\Release\net10.0\IdCard.Application.dll
+C:\ACH\FOX API\src\IdCard.Infrastructure\bin\Release\net10.0\IdCard.Domain.dll
+C:\ACH\FOX API\src\IdCard.Infrastructure\bin\Release\net10.0\IdCard.Domain.pdb
+C:\ACH\FOX API\src\IdCard.Infrastructure\bin\Release\net10.0\IdCard.Application.pdb
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.I.6BDCF279.Up2Date
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.Infrastructure.dll
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\refint\IdCard.Infrastructure.dll
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\IdCard.Infrastructure.pdb
+C:\ACH\FOX API\src\IdCard.Infrastructure\obj\Release\net10.0\ref\IdCard.Infrastructure.dll

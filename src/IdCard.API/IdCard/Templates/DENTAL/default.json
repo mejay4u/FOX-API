@@ -1,0 +1,163 @@
+{
+  "templateCode": "default",
+  "lob": "DENTAL",
+  "front": {
+    "backgroundAsset": "front.png",
+    "elements": [
+      {
+        "type": "text",
+        "header": "Subscriber Name",
+        "binding": "SubscriberName",
+        "x": 20,
+        "y": 62,
+        "width": 300,
+        "height": 30,
+        "fontSize": 13,
+        "bold": true,
+        "inline": false,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Member ID",
+        "binding": "Member.MemberId",
+        "x": 20,
+        "y": 108,
+        "width": 260,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Group Number",
+        "binding": "GroupNumber",
+        "x": 20,
+        "y": 131,
+        "width": 260,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Dental Plan",
+        "binding": "PlanName",
+        "x": 20,
+        "y": 154,
+        "width": 300,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Effective Date",
+        "binding": "EffectiveDate",
+        "x": 20,
+        "y": 177,
+        "width": 260,
+        "height": 20,
+        "fontSize": 11,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "staticText": "Benefits Summary",
+        "x": 20,
+        "y": 215,
+        "width": 260,
+        "height": 16,
+        "fontSize": 9,
+        "bold": true,
+        "inline": false,
+        "wrap": false,
+        "color": "#555555"
+      },
+      {
+        "type": "text",
+        "header": "Preventive",
+        "binding": "Member.CopayOffice",
+        "x": 20,
+        "y": 232,
+        "width": 280,
+        "height": 18,
+        "fontSize": 10,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Basic Restorative",
+        "binding": "Member.CopaySpecialist",
+        "x": 20,
+        "y": 254,
+        "width": 280,
+        "height": 18,
+        "fontSize": 10,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "header": "Deductible (Ind/Fam)",
+        "binding": "Deductible",
+        "x": 20,
+        "y": 276,
+        "width": 300,
+        "height": 18,
+        "fontSize": 10,
+        "bold": false,
+        "inline": true,
+        "wrap": false
+      },
+      {
+        "type": "text",
+        "staticText": "Dental Provider",
+        "x": 20,
+        "y": 312,
+        "width": 200,
+        "height": 14,
+        "fontSize": 9,
+        "bold": true,
+        "inline": false,
+        "wrap": false,
+        "color": "#555555"
+      },
+      {
+        "type": "text",
+        "binding": "PcpDetails",
+        "x": 20,
+        "y": 326,
+        "width": 320,
+        "height": 55,
+        "fontSize": 9,
+        "bold": false,
+        "inline": false,
+        "wrap": true,
+        "color": "#333333"
+      },
+      {
+        "type": "image",
+        "binding": "QRCode",
+        "x": 490,
+        "y": 200,
+        "width": 130,
+        "height": 130
+      }
+    ]
+  },
+  "back": {
+    "backgroundAsset": "back.png"
+  }
+}
