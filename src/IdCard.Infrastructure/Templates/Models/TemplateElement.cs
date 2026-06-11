@@ -25,6 +25,13 @@ public sealed class TemplateElement
     [JsonPropertyName("fontSize")]
     public float FontSize { get; set; } = 12f;
 
+    /// <summary>
+    /// Font size for the header text only.
+    /// When null or omitted the header inherits <see cref="FontSize"/>.
+    /// </summary>
+    [JsonPropertyName("headerFontSize")]
+    public float? HeaderFontSize { get; set; }
+
     /// <summary>When true the element's value font is bold.</summary>
     [JsonPropertyName("bold")]
     public bool Bold { get; set; }
