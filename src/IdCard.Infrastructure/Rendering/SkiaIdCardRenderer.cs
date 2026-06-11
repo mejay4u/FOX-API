@@ -164,10 +164,11 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
         // ── Case 2: Inline — "Header: value" on one line ─────────────
         if (el.Inline)
         {
-            using var hf = MakeFont(SelectTypeface(el.HeaderBold, el.HeaderItalic), el.FontSize);
+            float hSize = el.HeaderFontSize ?? el.FontSize;
+            using var hf = MakeFont(SelectTypeface(el.HeaderBold, el.HeaderItalic), hSize);
             using var rf = MakeFont(SelectTypeface(el.Bold,       el.Italic),       el.FontSize);
-            // Use the taller of the two for baseline so both fonts sit on the same line.
-            float by = BaselineY(el.Y, hf);
+            // Use the taller font's ascent so neither font clips above the element's top edge.
+            float by = BaselineY(el.Y, hf.Metrics.Ascent < rf.Metrics.Ascent ? hf : rf);
 
             if (!string.IsNullOrEmpty(el.Header))
             {
@@ -185,7 +186,8 @@ public sealed class SkiaIdCardRenderer : IIdCardRenderer, IDisposable
         // ── Case 3: Header on first line, value on subsequent lines ──
         if (!string.IsNullOrEmpty(el.Header))
         {
-            using var bf = MakeFont(SelectTypeface(el.HeaderBold, el.HeaderItalic), el.FontSize);
+            float hSize = el.HeaderFontSize ?? el.FontSize;
+            using var bf = MakeFont(SelectTypeface(el.HeaderBold, el.HeaderItalic), hSize);
             float headerBaseline = BaselineY(el.Y, bf);
             canvas.DrawText(el.Header, el.X, headerBaseline, bf, paint);
 
