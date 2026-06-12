@@ -1,25 +1,25 @@
-using Fox.Logging.Options;
+using App.Serilog.Options;
 using Microsoft.ApplicationInsights.Extensibility;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 using Serilog.Sinks.Dynatrace;
 
-namespace Fox.Logging.Builders;
+namespace App.Serilog.Builders;
 
 /// <summary>
-/// Translates <see cref="FoxLoggingOptions"/> into a configured Serilog <see cref="LoggerConfiguration"/>.
+/// Translates <see cref="AppSerilogOptions"/> into a configured Serilog <see cref="LoggerConfiguration"/>.
 /// Each sink is attached only when its Enabled flag is true, so sinks are switched purely via config.
 /// </summary>
-public static class FoxLoggerBuilder
+public static class AppSerilogBuilder
 {
     /// <summary>Builds a standalone configuration (useful for tests or non-host scenarios).</summary>
-    public static LoggerConfiguration Build(FoxLoggingOptions options, IServiceProvider? services = null) =>
+    public static LoggerConfiguration Build(AppSerilogOptions options, IServiceProvider? services = null) =>
         Configure(new LoggerConfiguration(), options, services);
 
-    /// <summary>Applies the Fox pipeline onto an existing configuration (used by UseSerilog).</summary>
+    /// <summary>Applies the App.Serilog pipeline onto an existing configuration (used by UseSerilog).</summary>
     public static LoggerConfiguration Configure(
-        LoggerConfiguration configuration, FoxLoggingOptions options, IServiceProvider? services = null)
+        LoggerConfiguration configuration, AppSerilogOptions options, IServiceProvider? services = null)
     {
         configuration
             .MinimumLevel.Is(ParseLevel(options.MinimumLevel))
@@ -44,7 +44,7 @@ public static class FoxLoggerBuilder
         return configuration;
     }
 
-    private static void AddConsole(LoggerConfiguration configuration, FoxLoggingOptions options)
+    private static void AddConsole(LoggerConfiguration configuration, AppSerilogOptions options)
     {
         var sink = options.Console;
         if (!sink.Enabled) return;
@@ -56,7 +56,7 @@ public static class FoxLoggerBuilder
             configuration.WriteTo.Console(outputTemplate: sink.OutputTemplate, restrictedToMinimumLevel: level);
     }
 
-    private static void AddJsonFile(LoggerConfiguration configuration, FoxLoggingOptions options)
+    private static void AddJsonFile(LoggerConfiguration configuration, AppSerilogOptions options)
     {
         var sink = options.JsonFile;
         if (!sink.Enabled) return;
@@ -75,14 +75,14 @@ public static class FoxLoggerBuilder
     }
 
     private static void AddApplicationInsights(
-        LoggerConfiguration configuration, FoxLoggingOptions options, IServiceProvider? services)
+        LoggerConfiguration configuration, AppSerilogOptions options, IServiceProvider? services)
     {
         var sink = options.ApplicationInsights;
         if (!sink.Enabled) return;
 
         if (string.IsNullOrWhiteSpace(sink.ConnectionString))
             throw new InvalidOperationException(
-                "FoxLogging:ApplicationInsights:ConnectionString is required when the Application Insights sink is enabled.");
+                "AppSerilog:ApplicationInsights:ConnectionString is required when the Application Insights sink is enabled.");
 
         // Reuse the app's TelemetryConfiguration when AddApplicationInsightsTelemetry was registered,
         // so logs correlate with requests/dependencies; otherwise create a standalone one.
@@ -101,14 +101,14 @@ public static class FoxLoggerBuilder
             restrictedToMinimumLevel: ParseLevel(sink.MinimumLevel, options.MinimumLevel));
     }
 
-    private static void AddDynatrace(LoggerConfiguration configuration, FoxLoggingOptions options)
+    private static void AddDynatrace(LoggerConfiguration configuration, AppSerilogOptions options)
     {
         var sink = options.Dynatrace;
         if (!sink.Enabled) return;
 
         if (string.IsNullOrWhiteSpace(sink.AccessToken) || string.IsNullOrWhiteSpace(sink.IngestUrl))
             throw new InvalidOperationException(
-                "FoxLogging:Dynatrace:AccessToken and FoxLogging:Dynatrace:IngestUrl are required when the Dynatrace sink is enabled.");
+                "AppSerilog:Dynatrace:AccessToken and AppSerilog:Dynatrace:IngestUrl are required when the Dynatrace sink is enabled.");
 
         configuration.WriteTo.Dynatrace(
             accessToken: sink.AccessToken,

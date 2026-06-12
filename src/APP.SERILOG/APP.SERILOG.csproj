@@ -7,9 +7,10 @@
     <LangVersion>latest</LangVersion>
 
     <!-- NuGet package metadata -->
-    <PackageId>Fox.Logging</PackageId>
+    <PackageId>APP.SERILOG</PackageId>
+    <RootNamespace>App.Serilog</RootNamespace>
     <Version>1.0.0</Version>
-    <Authors>Fox Team</Authors>
+    <Authors>APP Team</Authors>
     <Description>Config-driven Serilog logging library for .NET 8+ APIs. Switchable sinks: Console, JSON File, Application Insights and Dynatrace via appsettings.json.</Description>
     <PackageTags>serilog;logging;appinsights;dynatrace;structured-logging</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

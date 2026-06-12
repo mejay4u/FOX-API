@@ -1,5 +1,5 @@
-using Fox.Logging.Builders;
-using Fox.Logging.Options;
+using App.Serilog.Builders;
+using App.Serilog.Options;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -8,38 +8,38 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
 
-namespace Fox.Logging.Extensions;
+namespace App.Serilog.Extensions;
 
 /// <summary>
-/// Entry points for wiring Fox.Logging into any .NET 8+ host.
+/// Entry points for wiring App.Serilog into any .NET 8+ host.
 /// Typical usage in Program.cs:
 /// <code>
-/// builder.AddFoxLogging();
+/// builder.AddAppSerilog();
 /// ...
-/// app.UseFoxRequestLogging();
+/// app.UseAppSerilogRequestLogging();
 /// </code>
 /// </summary>
-public static class FoxLoggingExtensions
+public static class AppSerilogExtensions
 {
     /// <summary>
-    /// Reads the "FoxLogging" section, builds the Serilog pipeline and replaces the
+    /// Reads the "AppSerilog" section, builds the Serilog pipeline and replaces the
     /// default logging providers. Works for WebApplicationBuilder (minimal APIs).
     /// </summary>
-    public static WebApplicationBuilder AddFoxLogging(
+    public static WebApplicationBuilder AddAppSerilog(
         this WebApplicationBuilder builder,
-        Action<FoxLoggingOptions>? configure = null)
+        Action<AppSerilogOptions>? configure = null)
     {
-        builder.Services.AddFoxLoggingOptions(builder.Configuration, configure);
-        builder.Host.AddFoxLogging(configure);
+        builder.Services.AddAppSerilogOptions(builder.Configuration, configure);
+        builder.Host.AddAppSerilog(configure);
         return builder;
     }
 
     /// <summary>
     /// Same wiring for generic hosts (worker services, classic Startup-based apps).
     /// </summary>
-    public static IHostBuilder AddFoxLogging(
+    public static IHostBuilder AddAppSerilog(
         this IHostBuilder hostBuilder,
-        Action<FoxLoggingOptions>? configure = null)
+        Action<AppSerilogOptions>? configure = null)
     {
         return hostBuilder.UseSerilog((context, services, loggerConfiguration) =>
         {
@@ -47,22 +47,22 @@ public static class FoxLoggingExtensions
             if (string.IsNullOrWhiteSpace(options.Environment))
                 options.Environment = context.HostingEnvironment.EnvironmentName;
 
-            FoxLoggerBuilder.Configure(loggerConfiguration, options, services);
+            AppSerilogBuilder.Configure(loggerConfiguration, options, services);
         });
     }
 
     /// <summary>
-    /// Registers FoxLoggingOptions for DI so consumers can inject IOptions&lt;FoxLoggingOptions&gt;.
-    /// Called automatically by AddFoxLogging(WebApplicationBuilder); exposed for advanced scenarios.
+    /// Registers AppSerilogOptions for DI so consumers can inject IOptions&lt;AppSerilogOptions&gt;.
+    /// Called automatically by AddAppSerilog(WebApplicationBuilder); exposed for advanced scenarios.
     /// </summary>
-    public static IServiceCollection AddFoxLoggingOptions(
+    public static IServiceCollection AddAppSerilogOptions(
         this IServiceCollection services,
         IConfiguration configuration,
-        Action<FoxLoggingOptions>? configure = null)
+        Action<AppSerilogOptions>? configure = null)
     {
         var optionsBuilder = services
-            .AddOptions<FoxLoggingOptions>()
-            .Bind(configuration.GetSection(FoxLoggingOptions.SectionName));
+            .AddOptions<AppSerilogOptions>()
+            .Bind(configuration.GetSection(AppSerilogOptions.SectionName));
 
         if (configure is not null)
             optionsBuilder.Configure(configure);
@@ -72,9 +72,9 @@ public static class FoxLoggingExtensions
 
     /// <summary>
     /// Adds Serilog HTTP request logging middleware (one structured event per request)
-    /// when FoxLogging:EnableRequestLogging is true. Place it early in the pipeline.
+    /// when AppSerilog:EnableRequestLogging is true. Place it early in the pipeline.
     /// </summary>
-    public static WebApplication UseFoxRequestLogging(this WebApplication app)
+    public static WebApplication UseAppSerilogRequestLogging(this WebApplication app)
     {
         var options = BindOptions(app.Configuration, configure: null);
         if (!options.EnableRequestLogging)
@@ -103,19 +103,19 @@ public static class FoxLoggingExtensions
 
     /// <summary>
     /// Creates a minimal console logger for capturing startup failures before the host is built:
-    /// <code>Log.Logger = FoxLoggingExtensions.CreateBootstrapLogger();</code>
+    /// <code>Log.Logger = AppSerilogExtensions.CreateBootstrapLogger();</code>
     /// </summary>
-    public static Serilog.ILogger CreateBootstrapLogger() =>
+    public static global::Serilog.ILogger CreateBootstrapLogger() =>
         new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.Console()
             .CreateLogger();
 
-    internal static FoxLoggingOptions BindOptions(
-        IConfiguration configuration, Action<FoxLoggingOptions>? configure)
+    internal static AppSerilogOptions BindOptions(
+        IConfiguration configuration, Action<AppSerilogOptions>? configure)
     {
-        var options = new FoxLoggingOptions();
-        configuration.GetSection(FoxLoggingOptions.SectionName).Bind(options);
+        var options = new AppSerilogOptions();
+        configuration.GetSection(AppSerilogOptions.SectionName).Bind(options);
         configure?.Invoke(options);
         return options;
     }

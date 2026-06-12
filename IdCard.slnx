@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Fox.Logging/Fox.Logging.csproj" />
+    <Project Path="src/APP.SERILOG/APP.SERILOG.csproj" />
     <Project Path="src/IdCard.API/IdCard.API.csproj" />
     <Project Path="src/IdCard.Application/IdCard.Application.csproj" />
     <Project Path="src/IdCard.Domain/IdCard.Domain.csproj" />

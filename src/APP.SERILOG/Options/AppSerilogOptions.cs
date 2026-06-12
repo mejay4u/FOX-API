@@ -1,13 +1,13 @@
-namespace Fox.Logging.Options;
+namespace App.Serilog.Options;
 
 /// <summary>
-/// Root options bound from the "FoxLogging" configuration section.
+/// Root options bound from the "AppSerilog" configuration section.
 /// Enable/disable individual sinks purely via configuration.
 /// </summary>
-public sealed class FoxLoggingOptions
+public sealed class AppSerilogOptions
 {
     /// <summary>Configuration section name expected in appsettings.json.</summary>
-    public const string SectionName = "FoxLogging";
+    public const string SectionName = "AppSerilog";
 
     /// <summary>Logical application name stamped on every log event.</summary>
     public string ApplicationName { get; set; } = "Application";
@@ -25,7 +25,7 @@ public sealed class FoxLoggingOptions
         ["System"] = "Warning"
     };
 
-    /// <summary>Enable Serilog request logging middleware (UseFoxRequestLogging).</summary>
+    /// <summary>Enable Serilog request logging middleware (UseAppSerilogRequestLogging).</summary>
     public bool EnableRequestLogging { get; set; } = true;
 
     public ConsoleSinkOptions Console { get; set; } = new();

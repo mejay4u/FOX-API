@@ -1,4 +1,4 @@
-# Fox.Logging
+# APP.SERILOG
 
 Config-driven Serilog logging library for any **.NET 8+** API or worker service.
 All sinks are switched on/off purely through `appsettings.json` — no code changes needed
@@ -8,50 +8,50 @@ to move between local development (console / JSON file) and cloud (Application I
 
 | Sink | Config key | Use case |
 |---|---|---|
-| Console | `FoxLogging:Console` | Local machine, container stdout |
-| JSON File | `FoxLogging:JsonFile` | Rolling compact-JSON files at any file location |
-| Application Insights | `FoxLogging:ApplicationInsights` | Azure cloud telemetry |
-| Dynatrace | `FoxLogging:Dynatrace` | Dynatrace Log Monitoring v2 ingest |
+| Console | `AppSerilog:Console` | Local machine, container stdout |
+| JSON File | `AppSerilog:JsonFile` | Rolling compact-JSON files at any file location |
+| Application Insights | `AppSerilog:ApplicationInsights` | Azure cloud telemetry |
+| Dynatrace | `AppSerilog:Dynatrace` | Dynatrace Log Monitoring v2 ingest |
 
 ## Installation
 
 Project reference (until packaged):
 
 ```xml
-<ProjectReference Include="..\Fox.Logging\Fox.Logging.csproj" />
+<ProjectReference Include="..\APP.SERILOG\APP.SERILOG.csproj" />
 ```
 
 Or as NuGet package after packing:
 
 ```bash
-dotnet pack src/Fox.Logging -c Release
-dotnet add package Fox.Logging --source ./src/Fox.Logging/bin/Release
+dotnet pack src/APP.SERILOG -c Release
+dotnet add package APP.SERILOG --source ./src/APP.SERILOG/bin/Release
 ```
 
 ## Usage (Program.cs)
 
 ```csharp
-using Fox.Logging.Extensions;
+using APP.SERILOG.Extensions;
 using Serilog;
 
-Log.Logger = FoxLoggingExtensions.CreateBootstrapLogger(); // optional: capture startup errors
+Log.Logger = AppSerilogExtensions.CreateBootstrapLogger(); // optional: capture startup errors
 
 var builder = WebApplication.CreateBuilder(args);
-builder.AddFoxLogging();          // reads the "FoxLogging" section
+builder.AddAppSerilog();          // reads the "AppSerilog" section
 
 var app = builder.Build();
-app.UseFoxRequestLogging();       // one structured event per HTTP request
+app.UseAppSerilogRequestLogging();       // one structured event per HTTP request
 
 app.Run();
 ```
 
-Worker services / generic host: `hostBuilder.AddFoxLogging()`.
+Worker services / generic host: `hostBuilder.AddAppSerilog()`.
 
 ## Configuration (appsettings.json)
 
 ```json
 {
-  "FoxLogging": {
+  "AppSerilog": {
     "ApplicationName": "IdCard.API",
     "MinimumLevel": "Information",
     "EnableRequestLogging": true,
@@ -90,9 +90,9 @@ Put environment-specific blocks in `appsettings.Development.json` / `appsettings
 or override with environment variables, e.g.:
 
 ```
-FoxLogging__ApplicationInsights__Enabled=true
-FoxLogging__ApplicationInsights__ConnectionString=...
-FoxLogging__Console__Enabled=false
+AppSerilog__ApplicationInsights__Enabled=true
+AppSerilog__ApplicationInsights__ConnectionString=...
+AppSerilog__Console__Enabled=false
 ```
 
 Each sink also supports its own `MinimumLevel`, e.g. console at `Debug` while
@@ -104,4 +104,4 @@ Application Insights only receives `Warning` and above.
   user-secrets, Key Vault, or environment variables — not committed JSON.
 - If your app also calls `AddApplicationInsightsTelemetry()`, the sink reuses that
   `TelemetryConfiguration` so logs correlate with requests and dependencies.
-- Options are registered for DI: inject `IOptions<FoxLoggingOptions>` anywhere.
+- Options are registered for DI: inject `IOptions<AppSerilogOptions>` anywhere.
