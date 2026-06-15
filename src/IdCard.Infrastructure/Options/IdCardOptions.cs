@@ -9,6 +9,6 @@ public sealed class IdCardOptions
     /// <summary>Root folder that contains Templates/, Assets/, and Fonts/ sub-folders.</summary>
     public string BasePath { get; set; } = DefaultBasePath;
 
-    /// <summary>Maps plan codes that have no own template file to a shared canonical code.</summary>
-    public Dictionary<string, string> TemplateAliases { get; set; } = new();
+    /// <summary>Fallback template code when no specific template file exists for a plan code.</summary>
+    public string? TemplateAlias { get; set; }
 }
