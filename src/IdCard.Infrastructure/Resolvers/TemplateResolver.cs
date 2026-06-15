@@ -9,20 +9,18 @@ namespace IdCard.Infrastructure.Resolvers;
 /// Resolves the JSON template file path for a given LOB + templateCode.
 /// Resolution order:
 ///   1. Templates/{LOB}/{templateCode}.json
-///   2. Templates/{LOB}/{fallbackCode}.json  (IdCardOptions.TemplateAlias, passed by caller)
+///   2. Templates/{LOB}/{fallbackCode}.json  (supplied by caller)
 ///   3. Templates/{LOB}/default.json
 /// Throws FileNotFoundException if none exist.
 /// </summary>
 public sealed class TemplateResolver : ITemplateResolver
 {
     private readonly string _templatesRoot;
-    private readonly string? _templateAlias;
     private readonly ILogger<TemplateResolver> _logger;
 
     public TemplateResolver(IOptions<IdCardOptions> options, ILogger<TemplateResolver> logger)
     {
         _templatesRoot = Path.Combine(options.Value.BasePath, "Templates");
-        _templateAlias = options.Value.TemplateAlias?.ToUpperInvariant();
         _logger = logger;
     }
 
@@ -30,9 +28,7 @@ public sealed class TemplateResolver : ITemplateResolver
     {
         var normalizedLob      = lob.ToUpperInvariant();
         var normalizedCode     = templateCode.Trim('*').ToUpperInvariant();
-
-        // Caller-supplied fallback takes priority; otherwise use configured alias
-        var normalizedFallback = (fallbackCode ?? _templateAlias)?.ToUpperInvariant();
+        var normalizedFallback = fallbackCode?.ToUpperInvariant();
 
         // 1. Try specific template
         if (!string.IsNullOrEmpty(normalizedCode))
@@ -44,7 +40,7 @@ public sealed class TemplateResolver : ITemplateResolver
                 return specific;
             }
 
-            // 2. Try fallback (e.g. 0530/0540 → 0500)
+            // 2. Try caller-supplied fallback (e.g. 0530/0540 → 0500)
             if (!string.IsNullOrEmpty(normalizedFallback))
             {
                 var fallback = Path.Combine(_templatesRoot, normalizedLob, $"{normalizedFallback}.json");
