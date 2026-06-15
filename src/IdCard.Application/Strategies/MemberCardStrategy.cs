@@ -27,6 +27,7 @@ public sealed class MemberCardStrategy : IIdCardStrategy
         return new StrategyResult
         {
             Context = context,
+            // TemplateAlias fallback is supplied by the resolver via IdCardOptions
             TemplatePath = _templateResolver.Resolve(context.Lob, context.TemplateCode)
         };
     }

@@ -9,9 +9,9 @@ namespace IdCard.Infrastructure.Resolvers;
 /// Resolves the JSON template file path for a given LOB + templateCode.
 /// Resolution order:
 ///   1. Templates/{LOB}/{templateCode}.json
-///   2. Templates/{LOB}/default.json
-/// Throws FileNotFoundException if neither exists.
-/// No Strategy dependency — pure path logic.
+///   2. Templates/{LOB}/{fallbackCode}.json  (IdCardOptions.TemplateAlias, passed by caller)
+///   3. Templates/{LOB}/default.json
+/// Throws FileNotFoundException if none exist.
 /// </summary>
 public sealed class TemplateResolver : ITemplateResolver
 {
@@ -26,12 +26,15 @@ public sealed class TemplateResolver : ITemplateResolver
         _logger = logger;
     }
 
-    public string Resolve(string lob, string templateCode)
+    public string Resolve(string lob, string templateCode, string? fallbackCode = null)
     {
-        var normalizedLob  = lob.ToUpperInvariant();
-        var normalizedCode = templateCode.Trim('*').ToUpperInvariant();
+        var normalizedLob      = lob.ToUpperInvariant();
+        var normalizedCode     = templateCode.Trim('*').ToUpperInvariant();
 
-        // Try specific template first (skip when code is catch-all "*")
+        // Caller-supplied fallback takes priority; otherwise use configured alias
+        var normalizedFallback = (fallbackCode ?? _templateAlias)?.ToUpperInvariant();
+
+        // 1. Try specific template
         if (!string.IsNullOrEmpty(normalizedCode))
         {
             var specific = Path.Combine(_templatesRoot, normalizedLob, $"{normalizedCode}.json");
@@ -41,19 +44,19 @@ public sealed class TemplateResolver : ITemplateResolver
                 return specific;
             }
 
-            // Try alias template (e.g. 0530/0540 → 0500)
-            if (!string.IsNullOrEmpty(_templateAlias))
+            // 2. Try fallback (e.g. 0530/0540 → 0500)
+            if (!string.IsNullOrEmpty(normalizedFallback))
             {
-                var alias = Path.Combine(_templatesRoot, normalizedLob, $"{_templateAlias}.json");
-                if (File.Exists(alias))
+                var fallback = Path.Combine(_templatesRoot, normalizedLob, $"{normalizedFallback}.json");
+                if (File.Exists(fallback))
                 {
-                    _logger.LogDebug("Template resolved (alias {Alias}): {Path}", _templateAlias, alias);
-                    return alias;
+                    _logger.LogDebug("Template resolved (fallback {Fallback}): {Path}", normalizedFallback, fallback);
+                    return fallback;
                 }
             }
         }
 
-        // Fallback to default
+        // 3. Default
         var defaultPath = Path.Combine(_templatesRoot, normalizedLob, "default.json");
         if (File.Exists(defaultPath))
         {
