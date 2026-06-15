@@ -19,7 +19,8 @@ public static class DependencyInjection
         services.Configure<IdCardOptions>(opts =>
         {
             var section = configuration.GetSection(IdCardOptions.SectionName);
-            opts.BasePath = section[nameof(IdCardOptions.BasePath)] ?? IdCardOptions.DefaultBasePath;
+            opts.BasePath      = section[nameof(IdCardOptions.BasePath)] ?? IdCardOptions.DefaultBasePath;
+            opts.TemplateAlias = section[nameof(IdCardOptions.TemplateAlias)];
         });
 
         services.AddSingleton<ITemplateResolver, TemplateResolver>();
