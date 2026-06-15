@@ -16,18 +16,29 @@ namespace IdCard.Infrastructure.Resolvers;
 public sealed class TemplateResolver : ITemplateResolver
 {
     private readonly string _templatesRoot;
+    private readonly IReadOnlyDictionary<string, string> _aliases;
     private readonly ILogger<TemplateResolver> _logger;
 
     public TemplateResolver(IOptions<IdCardOptions> options, ILogger<TemplateResolver> logger)
     {
         _templatesRoot = Path.Combine(options.Value.BasePath, "Templates");
+        _aliases = options.Value.TemplateAliases
+            .ToDictionary(k => k.Key.ToUpperInvariant(), v => v.Value.ToUpperInvariant());
         _logger = logger;
     }
 
     public string Resolve(string lob, string templateCode)
     {
         var normalizedLob  = lob.ToUpperInvariant();
-        var normalizedCode = templateCode.Trim('*').ToLowerInvariant();
+        var normalizedCode = templateCode.Trim('*').ToUpperInvariant();
+
+        // Remap alias → canonical template code (e.g. 0530 → 0500)
+        if (!string.IsNullOrEmpty(normalizedCode) &&
+            _aliases.TryGetValue(normalizedCode, out var canonical))
+        {
+            _logger.LogDebug("Template alias: {Code} → {Canonical}", normalizedCode, canonical);
+            normalizedCode = canonical;
+        }
 
         // Try specific template first (skip when code is catch-all "*")
         if (!string.IsNullOrEmpty(normalizedCode))
