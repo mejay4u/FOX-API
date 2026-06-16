@@ -22,4 +22,8 @@ public sealed class MqOptions
 
     public string Environment { get; set; } = "PROD";
     public int TimeoutMs { get; set; } = 30_000;
+
+    // GetIDCardTransaction polling settings (mirrors reference: 40 attempts × 1 second)
+    public int MaxPollAttempts { get; set; } = 40;
+    public int PollIntervalMs { get; set; } = 1_000;
 }

@@ -14,12 +14,22 @@ internal sealed class NullIdCardMqGateway : IIdCardMqGateway
 
     public NullIdCardMqGateway(ILogger<NullIdCardMqGateway> logger) => _logger = logger;
 
-    public Task<MqIdCardResponse> RequestIdCardAsync(MqIdCardRequest request, CancellationToken ct = default)
+    public Task<MqIdCardResponse> PutIdCardRequestAsync(MqIdCardRequest request, CancellationToken ct = default)
     {
         _logger.LogWarning(
-            "IBM MQ is disabled (IbmMq:Enabled=false). Skipping MQ request for MemberId={MemberId}",
+            "IBM MQ disabled (IbmMq:Enabled=false). Skipping PUT for MemberId={MemberId}",
             request.MemberId);
 
         return Task.FromResult(new MqIdCardResponse { IsSuccess = true, MessageId = "NULL" });
+    }
+
+    public Task<MqIdCardResponse> GetIdCardTransactionAsync(
+        string correlationId, string memberId, CancellationToken ct = default)
+    {
+        _logger.LogWarning(
+            "IBM MQ disabled (IbmMq:Enabled=false). Skipping GET for MemberId={MemberId}",
+            memberId);
+
+        return Task.FromResult(new MqIdCardResponse { IsSuccess = true, MessageId = correlationId });
     }
 }

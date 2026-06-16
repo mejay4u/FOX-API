@@ -6,10 +6,10 @@ namespace IdCard.Application.Services;
 
 /// <summary>
 /// Orchestrates the full ID-card generation flow:
-/// 1. PUT ID card request to IBM MQ (notifies backend)
-/// 2. Fetch Member + Provider data for local rendering
-/// 3. Strategy → enriches context + resolves template path
-/// 4. Renderer → produces front/back PNG bytes
+/// 1. Fetch member data
+/// 2. PUT ID card request to IBM MQ (PutIdCardRequestAsync)
+/// 3. Poll OUTBOUND queue for transaction result (GetIdCardTransactionAsync)
+/// 4. Fetch provider, build context, apply strategy, render
 /// </summary>
 public sealed class IdCardAggregator
 {
@@ -35,18 +35,25 @@ public sealed class IdCardAggregator
 
     public async Task<IdCardResult> GenerateAsync(string memberId, string lob, CancellationToken ct = default)
     {
-        // Step 1 — Fetch member data (PlanCode needed for the MQ request)
+        // Step 1 — Fetch member (PlanCode needed for MQ request)
         var member = await _memberData.GetMemberAsync(memberId, ct);
 
-        // Step 2 — PUT ID card request to IBM MQ
-        var mqResult = await _mqGateway.RequestIdCardAsync(
+        // Step 2 — PUT ID card request to IBM MQ INBOUND queue
+        var putResult = await _mqGateway.PutIdCardRequestAsync(
             new MqIdCardRequest { MemberId = memberId, PlanId = member.PlanCode }, ct);
 
-        if (!mqResult.IsSuccess)
+        if (!putResult.IsSuccess)
             throw new InvalidOperationException(
-                $"IBM MQ ID card request failed for '{memberId}': {mqResult.ErrorMessage}");
+                $"IBM MQ PUT failed for '{memberId}': {putResult.ErrorMessage}");
 
-        // Step 3 — Fetch provider + build context
+        // Step 3 — Poll OUTBOUND queue for transaction result (GetIDCardTransaction pattern)
+        var getResult = await _mqGateway.GetIdCardTransactionAsync(putResult.MessageId, memberId, ct);
+
+        if (!getResult.IsSuccess)
+            throw new InvalidOperationException(
+                $"IBM MQ GET failed for '{memberId}': {getResult.ErrorMessage}");
+
+        // Step 4 — Fetch provider, build context, apply strategy, render
         var provider = await _providerData.GetProviderAsync(member.PcpId, ct);
 
         var context = new IdCardContext
@@ -57,7 +64,6 @@ public sealed class IdCardAggregator
             Provider     = provider
         };
 
-        // Step 4 — Strategy + render
         var strategyResult = _strategy.Execute(context);
         return await _renderer.RenderAsync(strategyResult.TemplatePath, strategyResult.Context);
     }
