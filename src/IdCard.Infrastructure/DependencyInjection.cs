@@ -48,7 +48,7 @@ public static class DependencyInjection
 
         // ── Email ────────────────────────────────────────────────────────────
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
-        services.AddSingleton<IEmailSender, MailKitEmailSender>();
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IEmailTemplateService, HtmlTemplateService>();
 
         return services;
