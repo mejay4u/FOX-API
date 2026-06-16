@@ -152,12 +152,15 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 
                     getQueue.Get(replyMsg, gmo);
 
-                    // Message received
-                    _logger.LogInformation(
-                        "IBM MQ GET success on attempt {Attempt}/{Max}. MemberId={MemberId}",
-                        attempt, _opts.MaxPollAttempts, memberId);
+                    // Message received — read and parse the IVR reply XML
+                    var replyXml = replyMsg.ReadString(replyMsg.MessageLength);
+                    var result   = IdCardResponseXmlParser.Parse(replyXml, correlationId);
 
-                    return new MqIdCardResponse { IsSuccess = true, MessageId = correlationId };
+                    _logger.LogInformation(
+                        "IBM MQ GET success on attempt {Attempt}/{Max}. MemberId={MemberId} IVRCode={IvrCode} Status={Status}",
+                        attempt, _opts.MaxPollAttempts, memberId, result.IvrCode, result.TransactionStatus);
+
+                    return result;
                 }
                 catch (MQException mqEx) when (mqEx.ReasonCode == MQC.MQRC_NO_MSG_AVAILABLE)
                 {

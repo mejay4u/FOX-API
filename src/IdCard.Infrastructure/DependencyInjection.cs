@@ -1,6 +1,7 @@
 using IdCard.Application.Interfaces;
 using IdCard.Domain.Interfaces;
 using IdCard.Infrastructure.Data;
+using IdCard.Infrastructure.Email;
 using IdCard.Infrastructure.Messaging;
 using IdCard.Infrastructure.Options;
 using IdCard.Infrastructure.QrCode;
@@ -44,6 +45,10 @@ public static class DependencyInjection
             services.AddSingleton<IIdCardMqGateway, IbmMqGateway>();
         else
             services.AddSingleton<IIdCardMqGateway, NullIdCardMqGateway>();
+
+        // ── Email ────────────────────────────────────────────────────────────
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddScoped<IEmailService, SmtpEmailService>();
 
         return services;
     }
