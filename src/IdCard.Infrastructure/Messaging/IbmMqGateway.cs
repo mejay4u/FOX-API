@@ -11,9 +11,9 @@ using Microsoft.Extensions.Options;
 namespace IdCard.Infrastructure.Messaging;
 
 /// <summary>
-/// IBM WebSphere MQ request-reply gateway.
-/// Maintains a single managed connection; reconnects automatically on broken-connection errors.
-/// All IBM MQ calls are synchronous; they are offloaded to the thread-pool via Task.Run.
+/// IBM WebSphere MQ gateway.
+/// PUTs an ID card request message then GETs the acknowledgement reply.
+/// All IBM MQ calls are synchronous; offloaded to the thread-pool via Task.Run.
 /// </summary>
 public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 {
@@ -31,7 +31,7 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
         _logger          = logger;
     }
 
-    public Task<MqIdCardResponse> RequestMemberDataAsync(MqIdCardRequest request, CancellationToken ct = default)
+    public Task<MqIdCardResponse> RequestIdCardAsync(MqIdCardRequest request, CancellationToken ct = default)
         => Task.Run(() => DoRequestReply(request), ct);
 
     // ── core synchronous logic ───────────────────────────────────────────────
@@ -52,6 +52,7 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 
         try
         {
+            // ── Build XML from template ──────────────────────────────────────
             var xml = IdCardRequestXmlBuilder.Build(
                 request.MemberId,
                 request.SubscriberId,
@@ -66,20 +67,20 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 
             var putMsg = new MQMessage
             {
-                Format        = MQC.MQFMT_STRING,
-                CharacterSet  = 1208,                    // UTF-8
+                Format           = MQC.MQFMT_STRING,
+                CharacterSet     = 1208,                 // UTF-8
                 ReplyToQueueName = _opts.ReplyQueueName
             };
             putMsg.WriteString(xml);
 
             requestQ.Put(putMsg, new MQPutMessageOptions());
 
+            var msgId = BitConverter.ToString(putMsg.MessageId);
             _logger.LogInformation(
-                "IBM MQ PUT success. MemberId={MemberId} MsgId={MsgId}",
-                request.MemberId,
-                BitConverter.ToString(putMsg.MessageId));
+                "IBM MQ PUT — ID card requested. MemberId={MemberId} MsgId={MsgId}",
+                request.MemberId, msgId);
 
-            // ── GET from reply queue, matched by correlation ID ──────────────
+            // ── GET acknowledgement from reply queue ─────────────────────────
             replyQ = _qm.AccessQueue(
                 _opts.ReplyQueueName,
                 MQC.MQOO_INPUT_EXCLUSIVE | MQC.MQOO_FAIL_IF_QUIESCING);
@@ -97,12 +98,11 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
             };
 
             replyQ.Get(replyMsg, gmo);
-            var responseXml = replyMsg.ReadString(replyMsg.MessageLength);
 
             _logger.LogInformation(
-                "IBM MQ GET success. MemberId={MemberId}", request.MemberId);
+                "IBM MQ GET — acknowledgement received. MemberId={MemberId}", request.MemberId);
 
-            return IdCardResponseXmlParser.Parse(responseXml);
+            return new MqIdCardResponse { IsSuccess = true, MessageId = msgId };
         }
         catch (MQException mqEx)
         {
@@ -138,10 +138,10 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 
             var props = new Hashtable
             {
-                [MQC.HOST_NAME_PROPERTY]  = _opts.ConnectionName,
-                [MQC.PORT_PROPERTY]        = _opts.Port,
-                [MQC.CHANNEL_PROPERTY]     = _opts.Channel,
-                [MQC.TRANSPORT_PROPERTY]   = MQC.TRANSPORT_MQSERIES_MANAGED
+                [MQC.HOST_NAME_PROPERTY] = _opts.ConnectionName,
+                [MQC.PORT_PROPERTY]      = _opts.Port,
+                [MQC.CHANNEL_PROPERTY]   = _opts.Channel,
+                [MQC.TRANSPORT_PROPERTY] = MQC.TRANSPORT_MQSERIES_MANAGED
             };
 
             _qm = new MQQueueManager(_opts.QueueManagerName, props);
@@ -164,8 +164,6 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 
     private static MqIdCardResponse Fail(string code, string message) =>
         new() { IsSuccess = false, ErrorCode = code, ErrorMessage = message };
-
-    // ── IDisposable ──────────────────────────────────────────────────────────
 
     public void Dispose()
     {

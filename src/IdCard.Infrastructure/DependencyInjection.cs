@@ -8,6 +8,7 @@ using IdCard.Infrastructure.Rendering;
 using IdCard.Infrastructure.Resolvers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
 namespace IdCard.Infrastructure;
 
 public static class DependencyInjection
@@ -28,6 +29,10 @@ public static class DependencyInjection
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddSingleton<IIdCardRenderer, SkiaIdCardRenderer>();
 
+        // Member + provider data for local card rendering (swap for real DB service when ready)
+        services.AddSingleton<IMemberDataService, MockMemberDataService>();
+        services.AddSingleton<IProviderDataService, MockProviderDataService>();
+
         // ── IBM MQ ──────────────────────────────────────────────────────────
         services.Configure<MqOptions>(configuration.GetSection(MqOptions.SectionName));
 
@@ -36,17 +41,9 @@ public static class DependencyInjection
             .GetValue<bool>(nameof(MqOptions.Enabled));
 
         if (mqEnabled)
-        {
             services.AddSingleton<IIdCardMqGateway, IbmMqGateway>();
-            services.AddSingleton<IMemberDataService, IbmMqMemberDataService>();
-        }
         else
-        {
-            // Mock data — swap for real repositories without touching any other layer
-            services.AddSingleton<IMemberDataService, MockMemberDataService>();
-        }
-
-        services.AddSingleton<IProviderDataService, MockProviderDataService>();
+            services.AddSingleton<IIdCardMqGateway, NullIdCardMqGateway>();
 
         return services;
     }

@@ -4,5 +4,5 @@ namespace IdCard.Application.Interfaces;
 
 public interface IIdCardMqGateway
 {
-    Task<MqIdCardResponse> RequestMemberDataAsync(MqIdCardRequest request, CancellationToken ct = default);
+    Task<MqIdCardResponse> RequestIdCardAsync(MqIdCardRequest request, CancellationToken ct = default);
 }

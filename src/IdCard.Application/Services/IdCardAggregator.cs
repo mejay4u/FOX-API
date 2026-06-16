@@ -6,24 +6,27 @@ namespace IdCard.Application.Services;
 
 /// <summary>
 /// Orchestrates the full ID-card generation flow:
-/// 1. Fetch Member + Provider data
-/// 2. Build IdCardContext
+/// 1. PUT ID card request to IBM MQ (notifies backend)
+/// 2. Fetch Member + Provider data for local rendering
 /// 3. Strategy → enriches context + resolves template path
 /// 4. Renderer → produces front/back PNG bytes
 /// </summary>
 public sealed class IdCardAggregator
 {
+    private readonly IIdCardMqGateway _mqGateway;
     private readonly IMemberDataService _memberData;
     private readonly IProviderDataService _providerData;
     private readonly IIdCardStrategy _strategy;
     private readonly IIdCardRenderer _renderer;
 
     public IdCardAggregator(
+        IIdCardMqGateway mqGateway,
         IMemberDataService memberData,
         IProviderDataService providerData,
         IIdCardStrategy strategy,
         IIdCardRenderer renderer)
     {
+        _mqGateway    = mqGateway;
         _memberData   = memberData;
         _providerData = providerData;
         _strategy     = strategy;
@@ -32,9 +35,25 @@ public sealed class IdCardAggregator
 
     public async Task<IdCardResult> GenerateAsync(string memberId, string lob, CancellationToken ct = default)
     {
+        // Step 1 — PUT ID card request to IBM MQ
+        var mqRequest = new MqIdCardRequest
+        {
+            MemberId     = memberId,
+            SubscriberId = memberId,
+            Lob          = lob.ToUpperInvariant()
+        };
+
+        var mqResult = await _mqGateway.RequestIdCardAsync(mqRequest, ct);
+
+        if (!mqResult.IsSuccess)
+            throw new InvalidOperationException(
+                $"IBM MQ ID card request failed for '{memberId}': {mqResult.ErrorMessage}");
+
+        // Step 2 — Fetch member + provider data for local rendering
         var member   = await _memberData.GetMemberAsync(memberId, ct);
         var provider = await _providerData.GetProviderAsync(member.PcpId, ct);
 
+        // Step 3 — Build context and apply strategy
         var context = new IdCardContext
         {
             Lob          = lob.ToUpperInvariant(),
@@ -45,6 +64,7 @@ public sealed class IdCardAggregator
 
         var strategyResult = _strategy.Execute(context);
 
+        // Step 4 — Render front + back images
         return await _renderer.RenderAsync(strategyResult.TemplatePath, strategyResult.Context);
     }
 }
