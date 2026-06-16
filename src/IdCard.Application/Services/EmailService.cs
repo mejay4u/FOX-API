@@ -1,6 +1,8 @@
 using IdCard.Application.Interfaces;
 using IdCard.Application.Models;
+using IdCard.Application.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace IdCard.Application.Services;
 
@@ -8,15 +10,18 @@ public sealed class EmailService : IEmailService
 {
     private readonly IEmailSender _sender;
     private readonly IEmailTemplateService _templates;
+    private readonly EmailServiceConfig _config;
     private readonly ILogger<EmailService> _logger;
 
     public EmailService(
         IEmailSender sender,
         IEmailTemplateService templates,
+        IOptions<EmailServiceConfig> config,
         ILogger<EmailService> logger)
     {
         _sender    = sender;
         _templates = templates;
+        _config    = config.Value;
         _logger    = logger;
     }
 
@@ -29,22 +34,27 @@ public sealed class EmailService : IEmailService
         string memberId,
         string planId,
         string lob,
+        string memberReference,
         string ivrCode,
         string transactionStatus,
         CancellationToken ct = default)
     {
+        var subject = $"{lob} {memberReference} portal: ID Card Request";
+
         var placeholders = new Dictionary<string, string>
         {
-            ["MemberName"]        = memberName,
+            ["UserName"]          = memberName,
             ["MemberId"]          = memberId,
             ["PlanId"]            = planId,
+            ["LobName"]           = lob,
+            ["MemberReference"]   = memberReference,
+            ["HelplineNumber"]    = _config.HelplinePhone,
+            ["HelplineTTY"]       = _config.HelplineTty,
             ["IvrCode"]           = ivrCode,
             ["TransactionStatus"] = transactionStatus
         };
 
-        return await SendTemplatedAsync(
-            toEmail, "ID Card Request Confirmation",
-            $"{lob}/id-card-request", placeholders, ct);
+        return await SendTemplatedAsync(toEmail, subject, $"{lob}/id-card-request", placeholders, ct);
     }
 
     public async Task<bool> SendActivationCodeEmailAsync(
@@ -56,8 +66,11 @@ public sealed class EmailService : IEmailService
     {
         var placeholders = new Dictionary<string, string>
         {
-            ["Username"]       = username,
-            ["ActivationCode"] = activationCode
+            ["UserName"]       = username,
+            ["ActivationCode"] = activationCode,
+            ["LobName"]        = lob,
+            ["HelplineNumber"] = _config.HelplinePhone,
+            ["HelplineTTY"]    = _config.HelplineTty
         };
 
         return await SendTemplatedAsync(
@@ -74,8 +87,11 @@ public sealed class EmailService : IEmailService
     {
         var placeholders = new Dictionary<string, string>
         {
-            ["Username"]  = username,
-            ["ResetLink"] = resetLink
+            ["UserName"]       = username,
+            ["ResetLink"]      = resetLink,
+            ["LobName"]        = lob,
+            ["HelplineNumber"] = _config.HelplinePhone,
+            ["HelplineTTY"]    = _config.HelplineTty
         };
 
         return await SendTemplatedAsync(
@@ -91,7 +107,10 @@ public sealed class EmailService : IEmailService
     {
         var placeholders = new Dictionary<string, string>
         {
-            ["Username"] = username
+            ["UserName"]       = username,
+            ["LobName"]        = lob,
+            ["HelplineNumber"] = _config.HelplinePhone,
+            ["HelplineTTY"]    = _config.HelplineTty
         };
 
         return await SendTemplatedAsync(
@@ -108,8 +127,11 @@ public sealed class EmailService : IEmailService
     {
         var placeholders = new Dictionary<string, string>
         {
-            ["Username"]   = username,
-            ["UnlockLink"] = unlockLink
+            ["UserName"]       = username,
+            ["UnlockLink"]     = unlockLink,
+            ["LobName"]        = lob,
+            ["HelplineNumber"] = _config.HelplinePhone,
+            ["HelplineTTY"]    = _config.HelplineTty
         };
 
         return await SendTemplatedAsync(

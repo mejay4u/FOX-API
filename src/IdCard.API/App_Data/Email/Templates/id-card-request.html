@@ -14,34 +14,38 @@
           <!-- Header -->
           <tr>
             <td style="background-color:#003087;padding:24px 32px;">
-              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;">Member Portal</p>
+              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:bold;">{LobName} Member Portal</p>
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
             <td style="padding:32px;">
-              <p style="margin:0 0 16px;">Dear {MemberName},</p>
+              <p style="margin:0 0 16px;">Dear {UserName},</p>
               <p style="margin:0 0 24px;">
                 Your ID card request has been received and is being processed.
                 Below is a summary of your transaction.
               </p>
 
               <table width="100%" cellpadding="10" cellspacing="0"
-                     style="border-collapse:collapse;border:1px solid #dee2e6;border-radius:4px;margin-bottom:24px;">
+                     style="border-collapse:collapse;border:1px solid #dee2e6;margin-bottom:24px;">
                 <tr style="background-color:#f8f9fa;">
-                  <td style="border:1px solid #dee2e6;font-weight:bold;width:40%;">Member ID</td>
-                  <td style="border:1px solid #dee2e6;">{MemberId}</td>
+                  <td style="border:1px solid #dee2e6;font-weight:bold;width:40%;">Member Reference</td>
+                  <td style="border:1px solid #dee2e6;">{MemberReference}</td>
                 </tr>
                 <tr>
+                  <td style="border:1px solid #dee2e6;font-weight:bold;">Member ID</td>
+                  <td style="border:1px solid #dee2e6;">{MemberId}</td>
+                </tr>
+                <tr style="background-color:#f8f9fa;">
                   <td style="border:1px solid #dee2e6;font-weight:bold;">Plan ID</td>
                   <td style="border:1px solid #dee2e6;">{PlanId}</td>
                 </tr>
-                <tr style="background-color:#f8f9fa;">
+                <tr>
                   <td style="border:1px solid #dee2e6;font-weight:bold;">Transaction Code</td>
                   <td style="border:1px solid #dee2e6;">{IvrCode}</td>
                 </tr>
-                <tr>
+                <tr style="background-color:#f8f9fa;">
                   <td style="border:1px solid #dee2e6;font-weight:bold;">Status</td>
                   <td style="border:1px solid #dee2e6;">{TransactionStatus}</td>
                 </tr>
@@ -49,9 +53,21 @@
 
               <p style="margin:0 0 16px;">
                 Your new ID card will be mailed to your address on file within 7–10 business days.
-                If you have any questions, please contact Member Support.
+                If you have any questions, please contact Member Services.
               </p>
-              <p style="margin:0;">Thank you,<br/><strong>Member Portal Team</strong></p>
+
+              <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding-right:24px;">
+                    <strong>Member Services:</strong><br/>{HelplineNumber}
+                  </td>
+                  <td>
+                    <strong>TTY:</strong><br/>{HelplineTTY}
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;">Thank you,<br/><strong>{LobName} Member Portal Team</strong></p>
             </td>
           </tr>
 

@@ -1,4 +1,5 @@
 using IdCard.Application.Interfaces;
+using IdCard.Application.Options;
 using IdCard.Domain.Interfaces;
 using IdCard.Infrastructure.Data;
 using IdCard.Infrastructure.Email;
@@ -48,6 +49,7 @@ public static class DependencyInjection
 
         // ── Email ────────────────────────────────────────────────────────────
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<EmailServiceConfig>(configuration.GetSection(EmailServiceConfig.SectionName));
         services.AddSingleton<IEmailSender, SmtpEmailSender>();
         services.AddSingleton<IEmailTemplateService, HtmlTemplateService>();
 

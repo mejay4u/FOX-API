@@ -22,6 +22,7 @@ public interface IEmailService
         string memberId,
         string planId,
         string lob,
+        string memberReference,
         string ivrCode,
         string transactionStatus,
         CancellationToken ct = default);

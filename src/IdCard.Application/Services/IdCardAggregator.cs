@@ -58,13 +58,15 @@ public sealed class IdCardAggregator
                 $"IBM MQ GET failed for '{memberId}': {getResult.ErrorMessage}");
 
         // Step 4 — Send confirmation email with IVR transaction data
-        var memberName = $"{member.FirstName} {member.LastName}";
+        var memberName      = $"{member.FirstName} {member.LastName}";
+        var memberReference = string.IsNullOrWhiteSpace(member.SubscriberId) ? memberId : member.SubscriberId;
         await _emailService.SendIdCardRequestEmailAsync(
             toEmail:           member.Email,
             memberName:        memberName,
             memberId:          memberId,
             planId:            member.PlanCode,
             lob:               lob,
+            memberReference:   memberReference,
             ivrCode:           getResult.IvrCode,
             transactionStatus: getResult.TransactionStatus,
             ct:                ct);
