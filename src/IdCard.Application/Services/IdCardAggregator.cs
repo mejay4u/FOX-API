@@ -64,6 +64,7 @@ public sealed class IdCardAggregator
             memberName:        memberName,
             memberId:          memberId,
             planId:            member.PlanCode,
+            lob:               lob,
             ivrCode:           getResult.IvrCode,
             transactionStatus: getResult.TransactionStatus,
             ct:                ct);

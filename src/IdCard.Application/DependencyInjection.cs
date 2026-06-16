@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IdCardAggregator>();
         services.AddScoped<IIdCardStrategy, MemberCardStrategy>();
+        services.AddScoped<IEmailService, EmailService>();
         return services;
     }
 }
