@@ -1,34 +1,31 @@
-using System.Text;
-using System.Xml;
-
 namespace IdCard.Infrastructure.Messaging.Xml;
 
 internal static class IdCardRequestXmlBuilder
 {
-    public static string Build(string memberId, string subscriberId, string lob, string environment)
+    private const string TemplatePath = "App_Data/xml/id-card-request.xml";
+
+    /// <summary>
+    /// Loads the XML template from disk and substitutes all placeholders,
+    /// matching the MEM.Next MemberCardAggregator replacement chain pattern.
+    /// </summary>
+    public static string Build(
+        string memberId,
+        string subscriberId,
+        string lob,
+        string environment,
+        string contentRootPath)
     {
-        var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmssffff");
+        var templateFile = Path.Combine(contentRootPath, TemplatePath);
+        var strXml = File.ReadAllText(templateFile);
 
-        var sb = new StringBuilder();
-        using var writer = XmlWriter.Create(sb, new XmlWriterSettings
-        {
-            Indent = true,
-            Encoding = Encoding.UTF8,
-            OmitXmlDeclaration = false
-        });
+        var timestamp = DateTime.Now.ToString("yyyyMMddHHmmssffff");
 
-        writer.WriteStartDocument();
-        writer.WriteStartElement("IdCardRequest");
+        var strXml1 = strXml.Replace("{MEMBERID}", memberId);
+        var strXml2 = strXml1.Replace("{CPPPMID}", subscriberId);
+        var strXml3 = strXml2.Replace("{LOB}", lob);
+        var strXml4 = strXml3.Replace("{ENVIRONMNT}", environment);
+        var strXml5 = strXml4.Replace("{TIMESTAMP}", timestamp);
 
-        writer.WriteElementString("MEMBERID", memberId);
-        writer.WriteElementString("CPPPMID", subscriberId);
-        writer.WriteElementString("LOB", lob);
-        writer.WriteElementString("ENVIRONMNT", environment);
-        writer.WriteElementString("TIMESTAMP", timestamp);
-
-        writer.WriteEndElement();
-        writer.WriteEndDocument();
-
-        return sb.ToString();
+        return strXml5;
     }
 }

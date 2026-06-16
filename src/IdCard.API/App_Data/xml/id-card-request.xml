@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IdCardRequest>
+  <MEMBERID>{MEMBERID}</MEMBERID>
+  <CPPPMID>{CPPPMID}</CPPPMID>
+  <LOB>{LOB}</LOB>
+  <ENVIRONMNT>{ENVIRONMNT}</ENVIRONMNT>
+  <TIMESTAMP>{TIMESTAMP}</TIMESTAMP>
+</IdCardRequest>

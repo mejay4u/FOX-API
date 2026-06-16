@@ -4,6 +4,7 @@ using IdCard.Application.Interfaces;
 using IdCard.Domain.Models;
 using IdCard.Infrastructure.Messaging.Xml;
 using IdCard.Infrastructure.Options;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -17,15 +18,17 @@ namespace IdCard.Infrastructure.Messaging;
 public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 {
     private readonly MqOptions _opts;
+    private readonly string _contentRootPath;
     private readonly ILogger<IbmMqGateway> _logger;
     private MQQueueManager? _qm;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private bool _disposed;
 
-    public IbmMqGateway(IOptions<MqOptions> options, ILogger<IbmMqGateway> logger)
+    public IbmMqGateway(IOptions<MqOptions> options, IHostEnvironment env, ILogger<IbmMqGateway> logger)
     {
-        _opts   = options.Value;
-        _logger = logger;
+        _opts            = options.Value;
+        _contentRootPath = env.ContentRootPath;
+        _logger          = logger;
     }
 
     public Task<MqIdCardResponse> RequestMemberDataAsync(MqIdCardRequest request, CancellationToken ct = default)
@@ -53,7 +56,8 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
                 request.MemberId,
                 request.SubscriberId,
                 request.Lob,
-                _opts.Environment);
+                _opts.Environment,
+                _contentRootPath);
 
             // ── PUT to request queue ─────────────────────────────────────────
             requestQ = _qm!.AccessQueue(

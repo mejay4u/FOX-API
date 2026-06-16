@@ -23,4 +23,11 @@
     </Content>
   </ItemGroup>
 
+  <!-- IBM MQ XML request templates -->
+  <ItemGroup>
+    <Content Update="App_Data\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
