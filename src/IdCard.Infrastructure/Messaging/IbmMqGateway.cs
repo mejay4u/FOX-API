@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Text;
 using IBM.WMQ;
 using IdCard.Application.Interfaces;
 using IdCard.Domain.Models;
@@ -32,6 +33,10 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
         _opts            = options.Value;
         _contentRootPath = env.ContentRootPath;
         _logger          = logger;
+
+        // Register legacy Windows codepages (e.g. 1252) required by IBM MQ managed client
+        // for character-set conversion of incoming messages.
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 
     public Task<MqIdCardResponse> RequestIdCardAsync(MqIdCardRequest request, CancellationToken ct = default)
@@ -100,7 +105,8 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 
             var replyMsg = new MQMessage
             {
-                CorrelationId = putMsg.MessageId
+                CorrelationId = putMsg.MessageId,
+                CharacterSet  = 1208   // request conversion to UTF-8 on MQGMO_CONVERT
             };
 
             var gmo = new MQGetMessageOptions
