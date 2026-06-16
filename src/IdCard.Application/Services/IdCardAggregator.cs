@@ -35,25 +35,20 @@ public sealed class IdCardAggregator
 
     public async Task<IdCardResult> GenerateAsync(string memberId, string lob, CancellationToken ct = default)
     {
-        // Step 1 — PUT ID card request to IBM MQ
-        var mqRequest = new MqIdCardRequest
-        {
-            MemberId     = memberId,
-            SubscriberId = memberId,
-            Lob          = lob.ToUpperInvariant()
-        };
+        // Step 1 — Fetch member data (PlanCode needed for the MQ request)
+        var member = await _memberData.GetMemberAsync(memberId, ct);
 
-        var mqResult = await _mqGateway.RequestIdCardAsync(mqRequest, ct);
+        // Step 2 — PUT ID card request to IBM MQ
+        var mqResult = await _mqGateway.RequestIdCardAsync(
+            new MqIdCardRequest { MemberId = memberId, PlanId = member.PlanCode }, ct);
 
         if (!mqResult.IsSuccess)
             throw new InvalidOperationException(
                 $"IBM MQ ID card request failed for '{memberId}': {mqResult.ErrorMessage}");
 
-        // Step 2 — Fetch member + provider data for local rendering
-        var member   = await _memberData.GetMemberAsync(memberId, ct);
+        // Step 3 — Fetch provider + build context
         var provider = await _providerData.GetProviderAsync(member.PcpId, ct);
 
-        // Step 3 — Build context and apply strategy
         var context = new IdCardContext
         {
             Lob          = lob.ToUpperInvariant(),
@@ -62,9 +57,8 @@ public sealed class IdCardAggregator
             Provider     = provider
         };
 
+        // Step 4 — Strategy + render
         var strategyResult = _strategy.Execute(context);
-
-        // Step 4 — Render front + back images
         return await _renderer.RenderAsync(strategyResult.TemplatePath, strategyResult.Context);
     }
 }

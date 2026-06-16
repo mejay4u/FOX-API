@@ -73,8 +73,7 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
             // ── Build XML from template ──────────────────────────────────────
             var xml = IdCardRequestXmlBuilder.Build(
                 request.MemberId,
-                request.SubscriberId,
-                request.Lob,
+                request.PlanId,
                 _opts.Environment,
                 _contentRootPath);
 

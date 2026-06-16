@@ -1,8 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<IdCardRequest>
-  <MEMBERID>{MEMBERID}</MEMBERID>
-  <CPPPMID>{CPPPMID}</CPPPMID>
-  <LOB>{LOB}</LOB>
-  <ENVIRONMNT>{ENVIRONMNT}</ENVIRONMNT>
-  <TIMESTAMP>{TIMESTAMP}</TIMESTAMP>
-</IdCardRequest>
+<?xml version="1.0" encoding="utf-8"?>
+<IVR>
+    <TradPtnrID>199999999</TradPtnrID>
+    <TranType>IVC</TranType>
+    <SubTranType>ALL</SubTranType>
+    <MEIA_MREQ_TYPE>N</MEIA_MREQ_TYPE>
+    <Environment>#ENVIRONMENT#</Environment>
+    <TransCounter>#TIMESTAMP#</TransCounter>
+    <RequestDate>#DATE#</RequestDate>
+    <RequestTime>#TIME#</RequestTime>
+    <PlanID>#PLANID#</PlanID>
+    <MemberID>#MEMBERID#</MemberID>
+</IVR>
