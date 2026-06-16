@@ -47,8 +47,18 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
         }
         catch (MQException ex)
         {
+            _logger.LogError(ex, "IBM MQ connect failed. ReasonCode={RC}", ex.ReasonCode);
             return Fail($"MQ_{ex.ReasonCode}", ex.Message);
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "IBM MQ connect failed with unexpected error");
+            return Fail("CONNECT_FAILED", ex.Message);
+        }
+
+        // Guard: EnsureConnected must have set both managers
+        if (_putQm is null || _getQm is null)
+            return Fail("CONNECT_FAILED", "Queue manager connection could not be established.");
 
         MQQueue? putQueue = null;
         MQQueue? getQueue = null;
@@ -175,7 +185,7 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
         var props = new Hashtable
         {
             [MQC.HOST_NAME_PROPERTY] = host,
-            [MQC.PORT_PROPERTY]      = int.Parse(port),
+            [MQC.PORT_PROPERTY]      = int.TryParse(port, out var p) ? p : 1414,
             [MQC.CHANNEL_PROPERTY]   = channel,
             [MQC.TRANSPORT_PROPERTY] = MQC.TRANSPORT_MQSERIES_MANAGED
         };
