@@ -12,7 +12,8 @@ namespace IdCard.Infrastructure.Messaging;
 
 /// <summary>
 /// IBM WebSphere MQ gateway.
-/// PUTs an ID card request message then GETs the acknowledgement reply.
+/// Opens separate managed connections for the PUT (request) and GET (reply) queues
+/// because they can live on different hosts / queue managers.
 /// All IBM MQ calls are synchronous; offloaded to the thread-pool via Task.Run.
 /// </summary>
 public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
@@ -20,7 +21,9 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
     private readonly MqOptions _opts;
     private readonly string _contentRootPath;
     private readonly ILogger<IbmMqGateway> _logger;
-    private MQQueueManager? _qm;
+
+    private MQQueueManager? _putQm;
+    private MQQueueManager? _getQm;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private bool _disposed;
 
@@ -47,8 +50,8 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
             return Fail($"MQ_{ex.ReasonCode}", ex.Message);
         }
 
-        MQQueue? requestQ = null;
-        MQQueue? replyQ   = null;
+        MQQueue? putQueue = null;
+        MQQueue? getQueue = null;
 
         try
         {
@@ -60,29 +63,29 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
                 _opts.Environment,
                 _contentRootPath);
 
-            // ── PUT to request queue ─────────────────────────────────────────
-            requestQ = _qm!.AccessQueue(
-                _opts.RequestQueueName,
+            // ── PUT to INBOUND request queue ─────────────────────────────────
+            putQueue = _putQm!.AccessQueue(
+                _opts.PutQueue,
                 MQC.MQOO_OUTPUT | MQC.MQOO_FAIL_IF_QUIESCING);
 
             var putMsg = new MQMessage
             {
                 Format           = MQC.MQFMT_STRING,
-                CharacterSet     = 1208,                 // UTF-8
-                ReplyToQueueName = _opts.ReplyQueueName
+                CharacterSet     = 1208,             // UTF-8
+                ReplyToQueueName = _opts.GetQueue
             };
             putMsg.WriteString(xml);
 
-            requestQ.Put(putMsg, new MQPutMessageOptions());
+            putQueue.Put(putMsg, new MQPutMessageOptions());
 
             var msgId = BitConverter.ToString(putMsg.MessageId);
             _logger.LogInformation(
-                "IBM MQ PUT — ID card requested. MemberId={MemberId} MsgId={MsgId}",
-                request.MemberId, msgId);
+                "IBM MQ PUT — ID card requested. MemberId={MemberId} Queue={Queue} MsgId={MsgId}",
+                request.MemberId, _opts.PutQueue, msgId);
 
-            // ── GET acknowledgement from reply queue ─────────────────────────
-            replyQ = _qm.AccessQueue(
-                _opts.ReplyQueueName,
+            // ── GET acknowledgement from OUTBOUND reply queue ─────────────────
+            getQueue = _getQm!.AccessQueue(
+                _opts.GetQueue,
                 MQC.MQOO_INPUT_EXCLUSIVE | MQC.MQOO_FAIL_IF_QUIESCING);
 
             var replyMsg = new MQMessage
@@ -97,10 +100,11 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
                 Options      = MQC.MQGMO_WAIT | MQC.MQGMO_CONVERT
             };
 
-            replyQ.Get(replyMsg, gmo);
+            getQueue.Get(replyMsg, gmo);
 
             _logger.LogInformation(
-                "IBM MQ GET — acknowledgement received. MemberId={MemberId}", request.MemberId);
+                "IBM MQ GET — acknowledgement received. MemberId={MemberId} Queue={Queue}",
+                request.MemberId, _opts.GetQueue);
 
             return new MqIdCardResponse { IsSuccess = true, MessageId = msgId };
         }
@@ -112,14 +116,14 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
                 request.MemberId, mqEx.ReasonCode);
 
             if (mqEx.ReasonCode is MQC.MQRC_CONNECTION_BROKEN or MQC.MQRC_NOT_CONNECTED)
-                ResetConnection();
+                ResetConnections();
 
             return Fail($"MQ_{mqEx.ReasonCode}", mqEx.Message);
         }
         finally
         {
-            try { requestQ?.Close(); } catch { /* best-effort */ }
-            try { replyQ?.Close();   } catch { /* best-effort */ }
+            try { putQueue?.Close(); } catch { /* best-effort */ }
+            try { getQueue?.Close(); } catch { /* best-effort */ }
         }
     }
 
@@ -127,28 +131,37 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
 
     private void EnsureConnected()
     {
-        if (_qm?.IsConnected == true)
+        if (_putQm?.IsConnected == true && _getQm?.IsConnected == true)
             return;
 
         _lock.Wait();
         try
         {
-            if (_qm?.IsConnected == true)
-                return;
-
-            var props = new Hashtable
+            if (_putQm?.IsConnected != true)
             {
-                [MQC.HOST_NAME_PROPERTY] = _opts.ConnectionName,
-                [MQC.PORT_PROPERTY]      = _opts.Port,
-                [MQC.CHANNEL_PROPERTY]   = _opts.Channel,
-                [MQC.TRANSPORT_PROPERTY] = MQC.TRANSPORT_MQSERIES_MANAGED
-            };
+                _putQm = Connect(
+                    _opts.PutQueueManager,
+                    _opts.PutHost,
+                    _opts.PutPort,
+                    _opts.PutChannel);
 
-            _qm = new MQQueueManager(_opts.QueueManagerName, props);
+                _logger.LogInformation(
+                    "Connected to PUT QueueManager={QM} {Host}:{Port} Channel={Ch}",
+                    _opts.PutQueueManager, _opts.PutHost, _opts.PutPort, _opts.PutChannel);
+            }
 
-            _logger.LogInformation(
-                "Connected to IBM MQ. QueueManager={QM} Host={Host}:{Port}",
-                _opts.QueueManagerName, _opts.ConnectionName, _opts.Port);
+            if (_getQm?.IsConnected != true)
+            {
+                _getQm = Connect(
+                    _opts.GetQueueManager,
+                    _opts.GetHost,
+                    _opts.GetPort,
+                    _opts.GetChannel);
+
+                _logger.LogInformation(
+                    "Connected to GET QueueManager={QM} {Host}:{Port} Channel={Ch}",
+                    _opts.GetQueueManager, _opts.GetHost, _opts.GetPort, _opts.GetChannel);
+            }
         }
         finally
         {
@@ -156,10 +169,26 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
         }
     }
 
-    private void ResetConnection()
+    private static MQQueueManager Connect(
+        string queueManager, string host, string port, string channel)
     {
-        try { _qm?.Disconnect(); } catch { /* ignore */ }
-        _qm = null;
+        var props = new Hashtable
+        {
+            [MQC.HOST_NAME_PROPERTY] = host,
+            [MQC.PORT_PROPERTY]      = int.Parse(port),
+            [MQC.CHANNEL_PROPERTY]   = channel,
+            [MQC.TRANSPORT_PROPERTY] = MQC.TRANSPORT_MQSERIES_MANAGED
+        };
+
+        return new MQQueueManager(queueManager, props);
+    }
+
+    private void ResetConnections()
+    {
+        try { _putQm?.Disconnect(); } catch { /* ignore */ }
+        try { _getQm?.Disconnect(); } catch { /* ignore */ }
+        _putQm = null;
+        _getQm = null;
     }
 
     private static MqIdCardResponse Fail(string code, string message) =>
@@ -169,7 +198,7 @@ public sealed class IbmMqGateway : IIdCardMqGateway, IDisposable
     {
         if (_disposed) return;
         _disposed = true;
-        ResetConnection();
+        ResetConnections();
         _lock.Dispose();
     }
 }
