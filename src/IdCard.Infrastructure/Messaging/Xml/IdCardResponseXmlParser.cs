@@ -1,37 +1,44 @@
 using IdCard.Domain.Models;
-using System.Xml.Linq;
+using IdCard.Infrastructure.Messaging.Models;
+using System.Xml.Serialization;
 
 namespace IdCard.Infrastructure.Messaging.Xml;
 
 internal static class IdCardResponseXmlParser
 {
-    /// <summary>
-    /// Parses the IVR reply XML returned from the OUTBOUND MQ queue.
-    /// Expected structure:
-    ///   &lt;IVR&gt;
-    ///     &lt;IVRCode&gt;00&lt;/IVRCode&gt;
-    ///     &lt;Status&gt;S&lt;/Status&gt;
-    ///     &lt;MessageStatus&gt;...&lt;/MessageStatus&gt;
-    ///   &lt;/IVR&gt;
-    /// </summary>
-    public static MqIdCardResponse Parse(string xml, string correlationId)
+    private static readonly XmlSerializer _serializer =
+        new(typeof(MemberIdCardTransaction));
+
+    public static MqIdCardResponse Parse(string responseXml, string correlationId)
     {
         try
         {
-            var doc  = XDocument.Parse(xml);
-            var root = doc.Root!;
+            MemberIdCardTransaction transaction;
+            using (var reader = new StringReader(responseXml))
+                transaction = (MemberIdCardTransaction)_serializer.Deserialize(reader)!;
 
-            var ivrCode   = root.Element("IVRCode")?.Value       ?? string.Empty;
-            var status    = root.Element("Status")?.Value        ?? string.Empty;
-            var msgStatus = root.Element("MessageStatus")?.Value ?? string.Empty;
+            // Mirror reference: ReturnCode == 0 && IVRCode == 0 → success
+            if (transaction.ReturnCode == 0 && transaction.IVRCode == 0)
+            {
+                return new MqIdCardResponse
+                {
+                    IsSuccess         = true,
+                    MessageId         = correlationId,
+                    IvrCode           = transaction.IVRCode.ToString(),
+                    TransactionStatus = transaction.Status,
+                    MessageStatus     = transaction.MessageStatus
+                };
+            }
 
             return new MqIdCardResponse
             {
-                IsSuccess         = true,
+                IsSuccess         = false,
                 MessageId         = correlationId,
-                IvrCode           = ivrCode,
-                TransactionStatus = status,
-                MessageStatus     = msgStatus
+                ErrorCode         = $"IVR_{transaction.IVRCode}",
+                ErrorMessage      = transaction.MessageStatus,
+                IvrCode           = transaction.IVRCode.ToString(),
+                TransactionStatus = transaction.Status,
+                MessageStatus     = transaction.MessageStatus
             };
         }
         catch (Exception ex)
