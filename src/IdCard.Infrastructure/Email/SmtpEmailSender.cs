@@ -1,4 +1,3 @@
-using System.Net;
 using System.Net.Mail;
 using IdCard.Application.Interfaces;
 using IdCard.Application.Models;
@@ -23,11 +22,8 @@ public sealed class SmtpEmailSender : IEmailSender
     {
         try
         {
-            using var smtp = new SmtpClient(_opts.SmtpHost, _opts.SmtpPort)
-            {
-                Credentials = new NetworkCredential(_opts.SmtpUser, _opts.SmtpPassword),
-                EnableSsl   = _opts.EnableSsl
-            };
+            // Internal SMTP relay — host only, no credentials or SSL required
+            using var smtp = new SmtpClient(_opts.SmtpHost);
 
             using var mail = new MailMessage
             {
