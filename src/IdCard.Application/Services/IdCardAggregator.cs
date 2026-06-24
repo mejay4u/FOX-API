@@ -37,7 +37,7 @@ public sealed class IdCardAggregator
         _renderer     = renderer;
     }
 
-    public async Task<IdCardResult> GenerateAsync(string memberId, string lob, CancellationToken ct = default)
+    public async Task<IdCardResult> GenerateAsync(string memberId, string lob, string lobEmail, CancellationToken ct = default)
     {
         // Step 1 — Fetch member (PlanCode needed for MQ request, Email needed for notification)
         var member = await _memberData.GetMemberAsync(memberId, ct);
@@ -62,6 +62,7 @@ public sealed class IdCardAggregator
         var memberReference = string.IsNullOrWhiteSpace(member.SubscriberId) ? memberId : member.SubscriberId;
         await _emailService.SendIdCardRequestEmailAsync(
             toEmail:           member.Email,
+            fromEmail:         lobEmail,
             memberName:        memberName,
             memberId:          memberId,
             planId:            member.PlanCode,

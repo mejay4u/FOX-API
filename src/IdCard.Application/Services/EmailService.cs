@@ -30,6 +30,7 @@ public sealed class EmailService : IEmailService
 
     public async Task<bool> SendIdCardRequestEmailAsync(
         string toEmail,
+        string fromEmail,
         string memberName,
         string memberId,
         string planId,
@@ -54,11 +55,12 @@ public sealed class EmailService : IEmailService
             ["TransactionStatus"] = transactionStatus
         };
 
-        return await SendTemplatedAsync(toEmail, subject, $"{lob}/id-card-request", placeholders, ct, LobFrom(lob));
+        return await SendTemplatedAsync(toEmail, fromEmail, subject, $"{lob}/id-card-request", placeholders, ct);
     }
 
     public async Task<bool> SendActivationCodeEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string activationCode,
         string lob,
@@ -74,12 +76,13 @@ public sealed class EmailService : IEmailService
         };
 
         return await SendTemplatedAsync(
-            toEmail, "Your Activation Code",
-            $"{lob}/activation-code", placeholders, ct, LobFrom(lob));
+            toEmail, fromEmail, "Your Activation Code",
+            $"{lob}/activation-code", placeholders, ct);
     }
 
     public async Task<bool> SendPasswordResetEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string resetLink,
         string lob,
@@ -95,12 +98,13 @@ public sealed class EmailService : IEmailService
         };
 
         return await SendTemplatedAsync(
-            toEmail, "Password Reset Request",
-            $"{lob}/password-reset", placeholders, ct, LobFrom(lob));
+            toEmail, fromEmail, "Password Reset Request",
+            $"{lob}/password-reset", placeholders, ct);
     }
 
     public async Task<bool> SendWelcomeEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string lob,
         CancellationToken ct = default)
@@ -114,12 +118,13 @@ public sealed class EmailService : IEmailService
         };
 
         return await SendTemplatedAsync(
-            toEmail, "Welcome to the Member Portal",
-            $"{lob}/welcome", placeholders, ct, LobFrom(lob));
+            toEmail, fromEmail, "Welcome to the Member Portal",
+            $"{lob}/welcome", placeholders, ct);
     }
 
     public async Task<bool> SendAccountUnlockEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string unlockLink,
         string lob,
@@ -135,12 +140,13 @@ public sealed class EmailService : IEmailService
         };
 
         return await SendTemplatedAsync(
-            toEmail, "Your Account Has Been Unlocked",
-            $"{lob}/account-unlock", placeholders, ct, LobFrom(lob));
+            toEmail, fromEmail, "Your Account Has Been Unlocked",
+            $"{lob}/account-unlock", placeholders, ct);
     }
 
     public async Task<bool> SendToMultipleAsync(
         IEnumerable<string> toEmails,
+        string fromEmail,
         string subject,
         string templateName,
         Dictionary<string, string> placeholders,
@@ -150,6 +156,7 @@ public sealed class EmailService : IEmailService
         var body = await _templates.RenderAsync($"{lob}/{templateName}", placeholders, ct);
         return await _sender.SendAsync(new EmailMessage
         {
+            From     = fromEmail,
             To       = toEmails.ToList(),
             Subject  = subject,
             HtmlBody = body
@@ -158,11 +165,11 @@ public sealed class EmailService : IEmailService
 
     private async Task<bool> SendTemplatedAsync(
         string toEmail,
+        string fromEmail,
         string subject,
         string templateName,
         Dictionary<string, string> placeholders,
-        CancellationToken ct,
-        string? fromEmail = null)
+        CancellationToken ct)
     {
         var body = await _templates.RenderAsync(templateName, placeholders, ct);
         return await _sender.SendAsync(new EmailMessage
@@ -173,10 +180,4 @@ public sealed class EmailService : IEmailService
             HtmlBody = body
         }, ct);
     }
-
-    // Resolves the sender address: LOB-specific first, then global fallback (EmailOptions.FromAddress)
-    private string? LobFrom(string lob)
-        => _config.LobFromAddresses.TryGetValue(lob, out var addr) && !string.IsNullOrWhiteSpace(addr)
-            ? addr
-            : null;
 }

@@ -18,6 +18,7 @@ public interface IEmailService
 
     Task<bool> SendIdCardRequestEmailAsync(
         string toEmail,
+        string fromEmail,
         string memberName,
         string memberId,
         string planId,
@@ -31,6 +32,7 @@ public interface IEmailService
 
     Task<bool> SendActivationCodeEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string activationCode,
         string lob,
@@ -38,6 +40,7 @@ public interface IEmailService
 
     Task<bool> SendPasswordResetEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string resetLink,
         string lob,
@@ -45,12 +48,14 @@ public interface IEmailService
 
     Task<bool> SendWelcomeEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string lob,
         CancellationToken ct = default);
 
     Task<bool> SendAccountUnlockEmailAsync(
         string toEmail,
+        string fromEmail,
         string username,
         string unlockLink,
         string lob,
@@ -60,6 +65,7 @@ public interface IEmailService
 
     Task<bool> SendToMultipleAsync(
         IEnumerable<string> toEmails,
+        string fromEmail,
         string subject,
         string templateName,
         Dictionary<string, string> placeholders,
