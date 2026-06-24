@@ -2,6 +2,7 @@ namespace IdCard.Application.Models;
 
 public sealed class EmailMessage
 {
+    public string? From { get; init; }   // overrides global FromAddress when set
     public List<string> To { get; init; } = [];
     public List<string> Cc { get; init; } = [];
     public List<string> Bcc { get; init; } = [];

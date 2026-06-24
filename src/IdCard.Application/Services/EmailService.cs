@@ -54,7 +54,7 @@ public sealed class EmailService : IEmailService
             ["TransactionStatus"] = transactionStatus
         };
 
-        return await SendTemplatedAsync(toEmail, subject, $"{lob}/id-card-request", placeholders, ct);
+        return await SendTemplatedAsync(toEmail, subject, $"{lob}/id-card-request", placeholders, ct, LobFrom(lob));
     }
 
     public async Task<bool> SendActivationCodeEmailAsync(
@@ -75,7 +75,7 @@ public sealed class EmailService : IEmailService
 
         return await SendTemplatedAsync(
             toEmail, "Your Activation Code",
-            $"{lob}/activation-code", placeholders, ct);
+            $"{lob}/activation-code", placeholders, ct, LobFrom(lob));
     }
 
     public async Task<bool> SendPasswordResetEmailAsync(
@@ -96,7 +96,7 @@ public sealed class EmailService : IEmailService
 
         return await SendTemplatedAsync(
             toEmail, "Password Reset Request",
-            $"{lob}/password-reset", placeholders, ct);
+            $"{lob}/password-reset", placeholders, ct, LobFrom(lob));
     }
 
     public async Task<bool> SendWelcomeEmailAsync(
@@ -115,7 +115,7 @@ public sealed class EmailService : IEmailService
 
         return await SendTemplatedAsync(
             toEmail, "Welcome to the Member Portal",
-            $"{lob}/welcome", placeholders, ct);
+            $"{lob}/welcome", placeholders, ct, LobFrom(lob));
     }
 
     public async Task<bool> SendAccountUnlockEmailAsync(
@@ -136,7 +136,7 @@ public sealed class EmailService : IEmailService
 
         return await SendTemplatedAsync(
             toEmail, "Your Account Has Been Unlocked",
-            $"{lob}/account-unlock", placeholders, ct);
+            $"{lob}/account-unlock", placeholders, ct, LobFrom(lob));
     }
 
     public async Task<bool> SendToMultipleAsync(
@@ -161,14 +161,22 @@ public sealed class EmailService : IEmailService
         string subject,
         string templateName,
         Dictionary<string, string> placeholders,
-        CancellationToken ct)
+        CancellationToken ct,
+        string? fromEmail = null)
     {
         var body = await _templates.RenderAsync(templateName, placeholders, ct);
         return await _sender.SendAsync(new EmailMessage
         {
+            From     = fromEmail,
             To       = [toEmail],
             Subject  = subject,
             HtmlBody = body
         }, ct);
     }
+
+    // Resolves the sender address: LOB-specific first, then global fallback (EmailOptions.FromAddress)
+    private string? LobFrom(string lob)
+        => _config.LobFromAddresses.TryGetValue(lob, out var addr) && !string.IsNullOrWhiteSpace(addr)
+            ? addr
+            : null;
 }

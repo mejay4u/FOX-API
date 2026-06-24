@@ -25,9 +25,11 @@ public sealed class SmtpEmailSender : IEmailSender
             // Internal SMTP relay — host only, no credentials or SSL required
             using var smtp = new SmtpClient(_opts.SmtpHost);
 
+            var fromAddress = string.IsNullOrWhiteSpace(message.From) ? _opts.FromAddress : message.From;
+
             using var mail = new MailMessage
             {
-                From       = new MailAddress(_opts.FromAddress, _opts.FromName),
+                From       = new MailAddress(fromAddress, _opts.FromName),
                 Subject    = message.Subject,
                 Body       = message.HtmlBody,
                 IsBodyHtml = true
