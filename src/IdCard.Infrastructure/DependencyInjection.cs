@@ -1,6 +1,9 @@
 using IdCard.Application.Interfaces;
+using IdCard.Application.Options;
 using IdCard.Domain.Interfaces;
 using IdCard.Infrastructure.Data;
+using IdCard.Infrastructure.Email;
+using IdCard.Infrastructure.Messaging;
 using IdCard.Infrastructure.Options;
 using IdCard.Infrastructure.QrCode;
 using IdCard.Infrastructure.Rendering;
@@ -16,6 +19,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // ── IdCard rendering ────────────────────────────────────────────────
         services.Configure<IdCardOptions>(opts =>
         {
             var section = configuration.GetSection(IdCardOptions.SectionName);
@@ -27,9 +31,27 @@ public static class DependencyInjection
         services.AddSingleton<IQrCodeService, QrCodeService>();
         services.AddSingleton<IIdCardRenderer, SkiaIdCardRenderer>();
 
-        // Mock data — swap for real repositories without touching any other layer
+        // Member + provider data for local card rendering (swap for real DB service when ready)
         services.AddSingleton<IMemberDataService, MockMemberDataService>();
         services.AddSingleton<IProviderDataService, MockProviderDataService>();
+
+        // ── IBM MQ ──────────────────────────────────────────────────────────
+        services.Configure<MqOptions>(configuration.GetSection(MqOptions.SectionName));
+
+        var mqEnabled = configuration
+            .GetSection(MqOptions.SectionName)
+            .GetValue<bool>(nameof(MqOptions.Enabled));
+
+        if (mqEnabled)
+            services.AddSingleton<IIdCardMqGateway, IbmMqGateway>();
+        else
+            services.AddSingleton<IIdCardMqGateway, NullIdCardMqGateway>();
+
+        // ── Email ────────────────────────────────────────────────────────────
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.Configure<EmailServiceConfig>(configuration.GetSection(EmailServiceConfig.SectionName));
+        services.AddSingleton<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton<IEmailTemplateService, HtmlTemplateService>();
 
         return services;
     }
