@@ -20,20 +20,21 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-var app = builder.Build();
+// YARP reverse proxy — routes other MMCC microservices through this host
+builder.Services
+    .AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
-// Support running behind the MMCC gateway at /idcard prefix
-var pathBase = app.Configuration["PathBase"] ?? string.Empty;
-if (!string.IsNullOrEmpty(pathBase))
-    app.UsePathBase(pathBase);
+var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("v1/swagger.json", "ID Card API v1");
-    c.RoutePrefix = "swagger";
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ID Card API v1");
+    c.RoutePrefix = string.Empty;
 });
 
 app.UseHttpsRedirection();
-app.MapControllers();
+app.MapControllers();   // /api/idcard/* handled locally
+app.MapReverseProxy();  // all other MMCC routes proxied downstream
 app.Run();
